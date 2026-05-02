@@ -39,6 +39,10 @@ export interface BoardObstacle {
   type: ObstacleType;
 }
 
+export type BoardPosition = [number, number];
+
+export type SuggestedMove = [BoardPosition, BoardPosition];
+
 export type BoardCell =
   | {
       kind: 'tile';

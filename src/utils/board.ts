@@ -5,6 +5,7 @@ import type {
   MatchResult,
   ObstaclePlacement,
   ObstacleType,
+  SuggestedMove,
   TileType,
 } from '../types/game';
 
@@ -274,3 +275,35 @@ export const resolveBoard = (board: BoardCell[][]): MatchResult => {
 };
 
 export const hasAnyMatch = (board: BoardCell[][]) => findMatches(board).size > 0;
+
+export const findSuggestedMove = (board: BoardCell[][]): SuggestedMove | null => {
+  const boardSize = board.length;
+
+  for (let row = 0; row < boardSize; row += 1) {
+    for (let col = 0; col < boardSize; col += 1) {
+      const first: [number, number] = [row, col];
+
+      if (board[row][col].kind !== 'tile') {
+        continue;
+      }
+
+      const candidates: Array<[number, number]> = [
+        [row, col + 1],
+        [row + 1, col],
+      ];
+
+      for (const second of candidates) {
+        if (!canSwapCells(board, first, second)) {
+          continue;
+        }
+
+        const swapped = swapTiles(board, first, second);
+        if (findMatches(swapped).size > 0) {
+          return [first, second];
+        }
+      }
+    }
+  }
+
+  return null;
+};

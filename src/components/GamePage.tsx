@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { obstacleDefinitions } from '../data/obstacles';
-import type { BoardCell, GameRules, LevelConfig } from '../types/game';
-import { areAdjacent, canSwapCells, createBoard, resolveBoard, swapTiles } from '../utils/board';
+import type { BoardCell, GameRules, LevelConfig, SuggestedMove } from '../types/game';
+import { areAdjacent, canSwapCells, createBoard, findSuggestedMove, resolveBoard, swapTiles } from '../utils/board';
 import { Board } from './Board';
 import { GameHeader } from './GameHeader';
 import { Modal } from './Modal';
@@ -34,13 +34,20 @@ export function GamePage({
   const [remainingObstacles, setRemainingObstacles] = useState(level.obstacles.length);
   const [passed, setPassed] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
-  const [lastMessage, setLastMessage] = useState('選兩個相鄰方塊交換。');
+  const [lastMessage, setLastMessage] = useState('請交換相鄰方塊，讓三個以上相同圖示連成一線。');
   const [isDemoActive, setIsDemoActive] = useState(Boolean(level.demo));
+  const [hintMove, setHintMove] = useState<SuggestedMove | null>(null);
+  const [interactionTick, setInteractionTick] = useState(0);
 
   const obstacleHint = useMemo(
     () => obstacleDefinitions.map((obstacle) => `${obstacle.name}：${obstacle.hint}`).join(' '),
     [],
   );
+
+  const clearIdleHint = () => {
+    setHintMove(null);
+    setInteractionTick((current) => current + 1);
+  };
 
   useEffect(() => {
     setBoard(createBoard(level.boardSize, level.obstacles));
@@ -50,10 +57,12 @@ export function GamePage({
     setPassed(false);
     setTimedOut(false);
     setIsDemoActive(Boolean(level.demo));
+    setHintMove(null);
+    setInteractionTick((current) => current + 1);
     setLastMessage(
       timeBonus > 0
-        ? `互動題答對，已增加 ${timeBonus} 秒。請清除所有障礙。`
-        : '選兩個相鄰主方塊交換，三消時清除旁邊的障礙。',
+        ? `互動題答對，增加 ${timeBonus} 秒，繼續挑戰。`
+        : '請交換相鄰方塊，讓三個以上相同圖示連成一線。',
     );
   }, [level.boardSize, level.demo, level.levelId, level.obstacles, rules.secondsPerLevel, timeBonus]);
 
@@ -84,8 +93,22 @@ export function GamePage({
   }, [isDemoActive, passed, secondsLeft, timedOut]);
 
   useEffect(() => {
+    if (passed || timedOut || isDemoActive) {
+      setHintMove(null);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setHintMove(findSuggestedMove(board));
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [board, interactionTick, isDemoActive, passed, timedOut]);
+
+  useEffect(() => {
     if (!passed && remainingObstacles === 0) {
       setPassed(true);
+      setHintMove(null);
       onScoreChange(rules.passBonusScore);
     }
   }, [onScoreChange, passed, remainingObstacles, rules.passBonusScore]);
@@ -95,9 +118,11 @@ export function GamePage({
       return;
     }
 
+    clearIdleHint();
+
     if (!selected) {
       if (board[row][col].kind === 'obstacle') {
-        setLastMessage('障礙方塊不可交換，請選主方塊。');
+        setLastMessage('障礙不能交換，請消除旁邊的主要方塊。');
         return;
       }
       setSelected([row, col]);
@@ -112,17 +137,17 @@ export function GamePage({
 
     if (!areAdjacent(selected, nextSelection)) {
       if (board[row][col].kind === 'obstacle') {
-        setLastMessage('障礙方塊不可交換，請選主方塊。');
+        setLastMessage('障礙不能交換，請消除旁邊的主要方塊。');
         return;
       }
       setSelected(nextSelection);
-      setLastMessage('請選擇相鄰的兩個方塊。');
+      setLastMessage('請選擇相鄰的兩個方塊交換。');
       return;
     }
 
     if (!canSwapCells(board, selected, nextSelection)) {
       setSelected(null);
-      setLastMessage('障礙方塊不可交換。');
+      setLastMessage('障礙不能交換。');
       return;
     }
 
@@ -131,7 +156,7 @@ export function GamePage({
     setSelected(null);
 
     if (resolved.removedTotal === 0) {
-      setLastMessage('這次沒有形成三消，方塊已換回。');
+      setLastMessage('這次交換沒有形成三消，請再試一次。');
       return;
     }
 
@@ -140,8 +165,8 @@ export function GamePage({
     setRemainingObstacles(resolved.remainingObstacles);
     setLastMessage(
       resolved.clearedObstacles > 0
-        ? `清除了 ${resolved.removedTotal} 個主方塊，並消除 ${resolved.clearedObstacles} 個障礙。`
-        : `清除了 ${resolved.removedTotal} 個主方塊。障礙需靠相鄰三消消除。`,
+        ? `消除 ${resolved.removedTotal} 個方塊，並清除 ${resolved.clearedObstacles} 個障礙。`
+        : `消除 ${resolved.removedTotal} 個方塊，繼續清除障礙。`,
     );
   };
 
@@ -159,7 +184,7 @@ export function GamePage({
         <div>
           <p className="eyebrow">{level.title}</p>
           <h1>{level.goal.label}</h1>
-          <p className="concept-text">核心觀念：{level.concept}</p>
+          <p className="concept-text">本關重點：{level.concept}</p>
         </div>
         <div className="progress-pill">
           剩餘障礙 {remainingObstacles}/{level.obstacles.length}
@@ -167,19 +192,31 @@ export function GamePage({
       </section>
       <p className="status-message obstacle-hint">{obstacleHint}</p>
 
-      <Board board={board} selected={selected} disabled={passed || timedOut || isDemoActive} onTilePress={handleTilePress} />
-      <p className="status-message" aria-live="polite">{lastMessage}</p>
+      <Board
+        board={board}
+        selected={selected}
+        hintMove={hintMove}
+        disabled={passed || timedOut || isDemoActive}
+        onTilePress={handleTilePress}
+      />
+      <p className="status-message" aria-live="polite">
+        {lastMessage}
+      </p>
 
       {level.demo && isDemoActive && <TutorialDemoOverlay boardSize={level.boardSize} demo={level.demo} />}
 
       {passed && (
         <Modal
           title="過關"
-          actions={<button className="primary-button" onClick={onLevelPassed}>觀看衛教影片</button>}
+          actions={
+            <button className="primary-button" onClick={onLevelPassed}>
+              觀看衛教影片
+            </button>
+          }
         >
-          <p>已清除本關所有障礙，過關獲得 {rules.passBonusScore} 分。</p>
+          <p>完成本關目標，獲得 {rules.passBonusScore} 分。</p>
           <p className="hint-text">{level.passHint}</p>
-          <p>看完衛教影片後才能進下一關。</p>
+          <p>下一步請先看完衛教影片，再進入下一關。</p>
         </Modal>
       )}
 
@@ -188,15 +225,22 @@ export function GamePage({
           title="時間到"
           actions={
             <>
-              <button className="secondary-button" onClick={onTimeUpSettle}>直接結算分數</button>
+              <button className="secondary-button" onClick={onTimeUpSettle}>
+                直接結算分數
+              </button>
               <button className="primary-button" disabled={score < rules.quizCostScore} onClick={onTimeUpQuiz}>
                 花費 {rules.quizCostScore} 分挑戰互動題
               </button>
             </>
           }
         >
-          <p>本關仍有障礙尚未清除。若分數足夠，可花費 {rules.quizCostScore} 分回答互動題，答對會回到本關並增加 {rules.quizCorrectTimeBonus} 秒。</p>
-          {score < rules.quizCostScore && <p className="warning-text">目前分數不足 {rules.quizCostScore} 分，無法進入互動題。</p>}
+          <p>
+            本關還有障礙沒有清除。你可以直接結算，或花費 {rules.quizCostScore} 分挑戰互動題，答對可回到本關並增加{' '}
+            {rules.quizCorrectTimeBonus} 秒。
+          </p>
+          {score < rules.quizCostScore && (
+            <p className="warning-text">目前分數未達 {rules.quizCostScore} 分，無法進入互動題。</p>
+          )}
         </Modal>
       )}
     </main>

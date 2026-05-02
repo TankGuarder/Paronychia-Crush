@@ -238,6 +238,7 @@ h2 {
 }
 
 .tile {
+  position: relative;
   display: grid;
   place-items: center;
   aspect-ratio: 1;
@@ -254,6 +255,13 @@ h2 {
   outline-offset: 1px;
 }
 
+.tile.hinted {
+  z-index: 1;
+  outline: 3px dashed #0f766e;
+  outline-offset: 3px;
+  animation: idleHintPulse 1.6s ease-in-out infinite;
+}
+
 .tile.obstacle {
   border-color: #7a4b45;
   box-shadow:
@@ -267,6 +275,25 @@ h2 {
   width: 82%;
   height: 82%;
   object-fit: contain;
+}
+
+.idle-hand {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 3px solid #ffffff;
+  border-radius: 999px;
+  background: #0f766e;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 900;
+  pointer-events: none;
+  box-shadow: 0 6px 12px rgba(15, 118, 110, 0.22);
+  animation: idleHandNudge 1.6s ease-in-out infinite;
 }
 
 .tile-ointment {
@@ -301,6 +328,19 @@ h2 {
   padding: 10px 12px;
   border-radius: 8px;
   background: #fff8ef;
+}
+
+@keyframes idleHintPulse {
+  50% {
+    outline-color: rgba(15, 118, 110, 0.55);
+    transform: scale(1.015);
+  }
+}
+
+@keyframes idleHandNudge {
+  50% {
+    transform: translate(-5px, -5px);
+  }
 }
 
 .demo-backdrop {
