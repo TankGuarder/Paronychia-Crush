@@ -257,21 +257,9 @@ h2 {
 
 .tile-icon {
   display: block;
-  width: 2.2em;
-  height: 2.2em;
+  width: 82%;
+  height: 82%;
   object-fit: contain;
-}
-
-.tile-name {
-  max-width: 100%;
-  overflow: hidden;
-  color: #17313a;
-  font-size: clamp(0.62rem, 2.9vw, 0.9rem);
-  font-weight: 900;
-  line-height: 1.05;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .tile-ointment {

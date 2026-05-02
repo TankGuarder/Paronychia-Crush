@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
-  <title id="title">藥膏占位圖示</title>
-  <rect width="96" height="96" rx="24" fill="#F8E7E4"/>
-  <path d="M28 62 54 36l18 18-26 26c-5 5-13 5-18 0s-5-13 0-18Z" fill="#F5B8B0"/>
-  <path d="M53 30 66 17c3-3 8-3 11 0l2 2c3 3 3 8 0 11L66 43 53 30Z" fill="#92C9D1"/>
-  <path d="M49 34 62 47" stroke="#31555C" stroke-width="5" stroke-linecap="round"/>
-  <rect x="27" y="57" width="28" height="17" rx="8" fill="#FFF7F3"/>
-  <circle cx="38" cy="66" r="4" fill="#E88C83"/>
+  <title id="title">藥膏管圖示</title>
+  <rect width="96" height="96" rx="22" fill="#F8E5E2"/>
+  <path d="M21 66 55 32l24 24-34 34c-6 6-16 6-22 0l-2-2c-6-6-6-16 0-22Z" fill="#F6B8B0"/>
+  <path d="M53 31 65 19c3-3 8-3 12 0l1 1c3 4 3 9 0 12L66 44 53 31Z" fill="#8DC4CC"/>
+  <path d="M47 38 60 51" stroke="#27474D" stroke-width="5" stroke-linecap="round"/>
+  <path d="M30 65c5-5 13-5 18 0l5 5-8 8c-4 4-10 4-14 0l-1-1c-3-3-3-8 0-12Z" fill="#FFF7F4"/>
+  <path d="M33 70h14" stroke="#D96F67" stroke-width="5" stroke-linecap="round"/>
+  <path d="M67 21 77 31" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".8"/>
 </svg>

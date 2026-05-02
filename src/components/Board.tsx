@@ -29,7 +29,6 @@ export function Board({ board, selected, disabled, onTilePress }: BoardProps) {
               {definition?.icon && (
                 <img className="tile-icon" src={definition.icon} alt="" aria-hidden="true" />
               )}
-              <span className="tile-name">{definition?.name}</span>
             </button>
           );
         }),
