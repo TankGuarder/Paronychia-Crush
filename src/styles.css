@@ -278,7 +278,7 @@ h2 {
   background: #f4cbc7;
 }
 
-.tile-looseSocks {
+.tile-socks {
   background: #c7dfef;
 }
 
@@ -286,20 +286,12 @@ h2 {
   background: #ecdba7;
 }
 
-.tile-moisturizer {
+.tile-lotion {
   background: #c8e3cb;
 }
 
 .tile-cottonSwab {
   background: #dfd2ea;
-}
-
-.tile-redness {
-  background: #efb7ad;
-}
-
-.tile-friction {
-  background: #ead5b5;
 }
 
 .status-message,
