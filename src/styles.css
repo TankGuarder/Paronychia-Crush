@@ -256,14 +256,10 @@ h2 {
 }
 
 .tile-icon {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 2.2em;
   height: 2.2em;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.8);
-  font-size: clamp(1.05rem, 5.4vw, 1.55rem);
-  font-weight: 900;
+  object-fit: contain;
 }
 
 .tile-name {
@@ -300,6 +296,10 @@ h2 {
 
 .tile-redness {
   background: #efb7ad;
+}
+
+.tile-friction {
+  background: #ead5b5;
 }
 
 .status-message,

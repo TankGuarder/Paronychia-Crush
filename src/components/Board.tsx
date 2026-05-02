@@ -26,7 +26,9 @@ export function Board({ board, selected, disabled, onTilePress }: BoardProps) {
               onClick={() => onTilePress(rowIndex, colIndex)}
               aria-label={`${definition?.name ?? tile.type}，第 ${rowIndex + 1} 列第 ${colIndex + 1} 欄`}
             >
-              <span className="tile-icon">{definition?.icon}</span>
+              {definition?.icon && (
+                <img className="tile-icon" src={definition.icon} alt="" aria-hidden="true" />
+              )}
               <span className="tile-name">{definition?.name}</span>
             </button>
           );

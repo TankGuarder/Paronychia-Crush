@@ -1,4 +1,11 @@
-export type TileType = 'ointment' | 'looseSocks' | 'gloves' | 'moisturizer' | 'cottonSwab' | 'redness';
+export type TileType =
+  | 'ointment'
+  | 'looseSocks'
+  | 'gloves'
+  | 'moisturizer'
+  | 'cottonSwab'
+  | 'redness'
+  | 'friction';
 
 export type Screen = 'home' | 'game' | 'video' | 'quiz' | 'summary';
 
@@ -6,6 +13,7 @@ export interface TileDefinition {
   id: TileType;
   name: string;
   icon: string;
+  isObstacle?: boolean;
   educationHint: string;
 }
 

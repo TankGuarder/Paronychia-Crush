@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">棉棒占位圖示</title>
+  <rect width="96" height="96" rx="24" fill="#F0E8F5"/>
+  <path d="M27 69 69 27" stroke="#8FB8C7" stroke-width="7" stroke-linecap="round"/>
+  <ellipse cx="23" cy="73" rx="13" ry="10" transform="rotate(-45 23 73)" fill="#FFFDF8"/>
+  <ellipse cx="73" cy="23" rx="13" ry="10" transform="rotate(-45 73 23)" fill="#FFFDF8"/>
+  <path d="M32 64 64 32" stroke="#31555C" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+</svg>
