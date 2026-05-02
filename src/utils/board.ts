@@ -1,9 +1,18 @@
 import { playableTileTypes } from '../data/tiles';
 import type { BoardTile, MatchResult, TileType } from '../types/game';
 
-const BOARD_SIZE = 8;
+const MAX_BOARD_SIZE = 5;
+const MIN_BOARD_SIZE = 3;
 
-export const boardSize = BOARD_SIZE;
+export const maxBoardSize = MAX_BOARD_SIZE;
+
+const normalizeBoardSize = (size: number) => {
+  if (!Number.isFinite(size)) {
+    return MAX_BOARD_SIZE;
+  }
+
+  return Math.min(MAX_BOARD_SIZE, Math.max(MIN_BOARD_SIZE, Math.floor(size)));
+};
 
 const makeId = () => crypto.randomUUID();
 
@@ -25,13 +34,14 @@ const createsImmediateMatch = (board: BoardTile[][], row: number, col: number, t
   return horizontal || vertical;
 };
 
-export const createBoard = (): BoardTile[][] => {
+export const createBoard = (requestedSize: number): BoardTile[][] => {
+  const boardSize = normalizeBoardSize(requestedSize);
   const board: BoardTile[][] = [];
 
   // 開局避免直接出現三連，讓玩家第一步更可控。
-  for (let row = 0; row < BOARD_SIZE; row += 1) {
+  for (let row = 0; row < boardSize; row += 1) {
     board[row] = [];
-    for (let col = 0; col < BOARD_SIZE; col += 1) {
+    for (let col = 0; col < boardSize; col += 1) {
       let type = randomTileType();
       while (createsImmediateMatch(board, row, col, type)) {
         type = randomTileType();
@@ -58,12 +68,13 @@ export const swapTiles = (board: BoardTile[][], first: [number, number], second:
 };
 
 const findMatches = (board: BoardTile[][]): Set<string> => {
+  const boardSize = board.length;
   const matched = new Set<string>();
 
   // 先找橫向，再找直向；交叉位置用 Set 避免重複計算。
-  for (let row = 0; row < BOARD_SIZE; row += 1) {
+  for (let row = 0; row < boardSize; row += 1) {
     let runStart = 0;
-    for (let col = 1; col <= BOARD_SIZE; col += 1) {
+    for (let col = 1; col <= boardSize; col += 1) {
       const current = board[row][col]?.type;
       const previous = board[row][runStart]?.type;
       if (current !== previous) {
@@ -77,9 +88,9 @@ const findMatches = (board: BoardTile[][]): Set<string> => {
     }
   }
 
-  for (let col = 0; col < BOARD_SIZE; col += 1) {
+  for (let col = 0; col < boardSize; col += 1) {
     let runStart = 0;
-    for (let row = 1; row <= BOARD_SIZE; row += 1) {
+    for (let row = 1; row <= boardSize; row += 1) {
       const current = board[row]?.[col]?.type;
       const previous = board[runStart]?.[col]?.type;
       if (current !== previous) {
@@ -97,18 +108,19 @@ const findMatches = (board: BoardTile[][]): Set<string> => {
 };
 
 const collapseBoard = (board: BoardTile[][], matched: Set<string>): BoardTile[][] => {
-  const next: BoardTile[][] = Array.from({ length: BOARD_SIZE }, () => Array<BoardTile>(BOARD_SIZE));
+  const boardSize = board.length;
+  const next: BoardTile[][] = Array.from({ length: boardSize }, () => Array<BoardTile>(boardSize));
 
   // 每一欄由下往上保留未消除方塊，再從頂端補入新方塊。
-  for (let col = 0; col < BOARD_SIZE; col += 1) {
+  for (let col = 0; col < boardSize; col += 1) {
     const survivors: BoardTile[] = [];
-    for (let row = BOARD_SIZE - 1; row >= 0; row -= 1) {
+    for (let row = boardSize - 1; row >= 0; row -= 1) {
       if (!matched.has(`${row}-${col}`)) {
         survivors.push(board[row][col]);
       }
     }
 
-    for (let row = BOARD_SIZE - 1; row >= 0; row -= 1) {
+    for (let row = boardSize - 1; row >= 0; row -= 1) {
       next[row][col] = survivors.shift() ?? makeTile();
     }
   }

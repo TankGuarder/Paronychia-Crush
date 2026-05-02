@@ -228,11 +228,10 @@ h2 {
 
 .board {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
-  gap: 6px;
-  width: min(100%, 620px);
+  gap: clamp(7px, 2vw, 10px);
+  width: min(100%, 440px);
   margin: 0 auto;
-  padding: 8px;
+  padding: clamp(8px, 2vw, 12px);
   border-radius: 8px;
   background: #c9dfda;
   touch-action: manipulation;
@@ -243,7 +242,7 @@ h2 {
   place-items: center;
   aspect-ratio: 1;
   min-width: 0;
-  padding: 2px;
+  padding: clamp(4px, 1.8vw, 8px);
   border: 3px solid rgba(255, 255, 255, 0.86);
   border-radius: 8px;
   color: #102d33;

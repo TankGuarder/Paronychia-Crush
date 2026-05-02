@@ -71,7 +71,7 @@ npm run build
 - `src/data/rules.ts`: 固定遊戲規則
 - `src/data/levels.ts`: 10 關固定研究版關卡與衛教影片文案
 - `src/data/questions.ts`: 互動題題庫
-- `src/utils/board.ts`: 8x8 三消棋盤、交換、消除與補牌邏輯
+- `src/utils/board.ts`: 關卡設定控制的三消棋盤，最大 5x5，含交換、消除與補牌邏輯
 - `src/utils/leaderboard.ts`: localStorage 暫時排行榜
 
 ## MVP 規則預設

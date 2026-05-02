@@ -11,8 +11,14 @@ interface BoardProps {
 }
 
 export function Board({ board, selected, disabled, onTilePress }: BoardProps) {
+  const boardSize = board.length;
+
   return (
-    <div className="board" aria-label="三消棋盤">
+    <div
+      className="board"
+      style={{ gridTemplateColumns: `repeat(${boardSize}, minmax(0, 1fr))` }}
+      aria-label={`${boardSize} 乘 ${boardSize} 三消棋盤`}
+    >
       {board.map((row, rowIndex) =>
         row.map((tile, colIndex) => {
           const definition = tileMap.get(tile.type);

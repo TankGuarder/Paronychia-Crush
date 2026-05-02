@@ -29,6 +29,7 @@ export interface LevelConfig {
   levelId: string;
   order: number;
   version: string;
+  boardSize: number;
   title: string;
   goal: LevelGoal;
   targetText: string;

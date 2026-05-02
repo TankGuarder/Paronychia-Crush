@@ -27,7 +27,7 @@ export function GamePage({
   onTimeUpSettle,
   onTimeUpQuiz,
 }: GamePageProps) {
-  const [board, setBoard] = useState<BoardTile[][]>(() => createBoard());
+  const [board, setBoard] = useState<BoardTile[][]>(() => createBoard(level.boardSize));
   const [selected, setSelected] = useState<[number, number] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(rules.secondsPerLevel + timeBonus);
   const [collected, setCollected] = useState(0);
@@ -41,14 +41,14 @@ export function GamePage({
   );
 
   useEffect(() => {
-    setBoard(createBoard());
+    setBoard(createBoard(level.boardSize));
     setSelected(null);
     setSecondsLeft(rules.secondsPerLevel + timeBonus);
     setCollected(0);
     setPassed(false);
     setTimedOut(false);
     setLastMessage(timeBonus > 0 ? `互動題答對，已增加 ${timeBonus} 秒。` : '選兩個相鄰方塊交換。');
-  }, [level.levelId, rules.secondsPerLevel, timeBonus]);
+  }, [level.boardSize, level.levelId, rules.secondsPerLevel, timeBonus]);
 
   useEffect(() => {
     if (passed || timedOut) {
