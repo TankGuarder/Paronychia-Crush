@@ -90,6 +90,22 @@ h2 {
   font-size: 1.1rem;
 }
 
+.liff-status {
+  display: grid;
+  gap: 4px;
+  margin: 18px 0;
+  padding: 12px 14px;
+  border: 1px solid #c9ded9;
+  border-radius: 8px;
+  background: #eef7f5;
+  color: #31555c;
+  font-size: 0.98rem;
+}
+
+.liff-status strong {
+  color: #0f5f59;
+}
+
 .field {
   display: grid;
   gap: 8px;

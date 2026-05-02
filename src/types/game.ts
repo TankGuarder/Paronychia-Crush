@@ -45,6 +45,7 @@ export interface QuizQuestion {
 
 export interface LeaderboardEntry {
   nickname: string;
+  lineUserId?: string;
   score: number;
   completedLevel: number;
   createdAt: string;
@@ -68,8 +69,27 @@ export interface GameRules {
 export interface GameRunState {
   screen: Screen;
   nickname: string;
+  lineUserId?: string;
   currentLevelIndex: number;
   completedLevel: number;
   score: number;
   timeBonus: number;
+}
+
+export type LiffMode = 'line' | 'browser' | 'mock';
+
+export interface LiffUserProfile {
+  lineUserId?: string;
+  displayName?: string;
+  pictureUrl?: string;
+  mode: LiffMode;
+  isLoggedIn: boolean;
+  isMock: boolean;
+}
+
+export interface LiffInitState {
+  isLoading: boolean;
+  isConfigured: boolean;
+  error?: string;
+  profile: LiffUserProfile;
 }

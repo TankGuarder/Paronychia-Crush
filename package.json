@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",
+    "@line/liff": "^2.27.1",
     "vite": "^7.0.0",
     "typescript": "^5.8.0",
     "react": "^19.0.0",

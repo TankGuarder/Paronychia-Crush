@@ -19,6 +19,28 @@ npm run dev
 
 瀏覽器開啟 Vite 顯示的本機網址，通常是 `http://localhost:5173`。
 
+## LIFF 設定
+
+LIFF ID 不要寫死在程式碼中。請在本機建立 `.env.local`：
+
+```text
+VITE_LIFF_ID=你的_LIFF_ID
+```
+
+部署到 GitHub Pages 時，請在 GitHub repository 的 `Settings > Secrets and variables > Actions > Variables` 新增：
+
+```text
+VITE_LIFF_ID
+```
+
+並在 `.github/workflows/deploy.yml` 的 build step 將它傳給 Vite。若沒有設定 `VITE_LIFF_ID`，遊戲會自動使用本地測試假資料。
+
+LINE Developers Console 需要設定的 LIFF Endpoint URL：
+
+```text
+https://tankguarder.github.io/Paronychia-Crush/
+```
+
 ## Windows 開啟方式
 
 在 PowerShell 進入專案資料夾：

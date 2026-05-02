@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { GamePage } from './components/GamePage';
 import { HomePage } from './components/HomePage';
 import { QuizPage } from './components/QuizPage';
@@ -6,6 +6,7 @@ import { SummaryPage } from './components/SummaryPage';
 import { VideoPage } from './components/VideoPage';
 import { levels } from './data/levels';
 import { gameRules } from './data/rules';
+import { useLiffProfile } from './hooks/useLiffProfile';
 import type { GameRunState, LeaderboardEntry } from './types/game';
 import { saveScore } from './utils/leaderboard';
 
@@ -22,10 +23,39 @@ export default function App() {
   const [runState, setRunState] = useState<GameRunState>(initialRunState);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [rank, setRank] = useState(0);
+  const liffState = useLiffProfile();
 
-  const { screen, nickname, currentLevelIndex, completedLevel, score, timeBonus } = runState;
+  const { screen, nickname, lineUserId, currentLevelIndex, completedLevel, score, timeBonus } = runState;
   const currentLevel = levels[currentLevelIndex];
   const isFinalLevel = currentLevelIndex === levels.length - 1;
+
+  const liffStatusText = (() => {
+    if (liffState.isLoading) {
+      return 'LIFF 初始化中';
+    }
+    if (liffState.error) {
+      return 'LIFF 初始化失敗，使用本地測試模式';
+    }
+    if (!liffState.isConfigured) {
+      return '本地測試模式';
+    }
+    if (liffState.profile.mode === 'line') {
+      return 'LINE 環境已連線';
+    }
+    return '一般瀏覽器模式';
+  })();
+
+  useEffect(() => {
+    if (liffState.isLoading) {
+      return;
+    }
+
+    setRunState((current) => ({
+      ...current,
+      lineUserId: liffState.profile.lineUserId,
+      nickname: current.nickname || liffState.profile.displayName || '',
+    }));
+  }, [liffState.isLoading, liffState.profile.displayName, liffState.profile.lineUserId]);
 
   const changeScore = useCallback((delta: number) => {
     setRunState((current) => ({
@@ -41,6 +71,7 @@ export default function App() {
     setRunState((current) => ({
       ...initialRunState,
       nickname: current.nickname,
+      lineUserId: current.lineUserId,
       screen: 'game',
     }));
   };
@@ -48,6 +79,7 @@ export default function App() {
   const finishRun = useCallback(() => {
     const entry: LeaderboardEntry = {
       nickname: nickname.trim() || '未命名玩家',
+      lineUserId,
       score,
       completedLevel,
       createdAt: new Date().toISOString(),
@@ -56,7 +88,7 @@ export default function App() {
     setLeaderboard(result.entries);
     setRank(result.rank);
     setRunState((current) => ({ ...current, screen: 'summary' }));
-  }, [completedLevel, nickname, score]);
+  }, [completedLevel, lineUserId, nickname, score]);
 
   const handleLevelPassed = () => {
     setRunState((current) => ({
@@ -97,6 +129,7 @@ export default function App() {
     setRunState((current) => ({
       ...initialRunState,
       nickname: current.nickname,
+      lineUserId: current.lineUserId,
     }));
   };
 
@@ -104,6 +137,9 @@ export default function App() {
     return (
       <HomePage
         nickname={nickname}
+        liffStatusText={liffStatusText}
+        liffDisplayName={liffState.profile.displayName}
+        lineUserId={lineUserId}
         onNicknameChange={(value) => setRunState((current) => ({ ...current, nickname: value }))}
         onStart={startGame}
       />
