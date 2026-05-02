@@ -5,6 +5,7 @@ import { areAdjacent, canSwapCells, createBoard, resolveBoard, swapTiles } from 
 import { Board } from './Board';
 import { GameHeader } from './GameHeader';
 import { Modal } from './Modal';
+import { TutorialDemoOverlay } from './TutorialDemoOverlay';
 
 interface GamePageProps {
   level: LevelConfig;
@@ -34,6 +35,7 @@ export function GamePage({
   const [passed, setPassed] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [lastMessage, setLastMessage] = useState('選兩個相鄰方塊交換。');
+  const [isDemoActive, setIsDemoActive] = useState(Boolean(level.demo));
 
   const obstacleHint = useMemo(
     () => obstacleDefinitions.map((obstacle) => `${obstacle.name}：${obstacle.hint}`).join(' '),
@@ -47,15 +49,25 @@ export function GamePage({
     setRemainingObstacles(level.obstacles.length);
     setPassed(false);
     setTimedOut(false);
+    setIsDemoActive(Boolean(level.demo));
     setLastMessage(
       timeBonus > 0
         ? `互動題答對，已增加 ${timeBonus} 秒。請清除所有障礙。`
         : '選兩個相鄰主方塊交換，三消時清除旁邊的障礙。',
     );
-  }, [level.boardSize, level.levelId, level.obstacles, rules.secondsPerLevel, timeBonus]);
+  }, [level.boardSize, level.demo, level.levelId, level.obstacles, rules.secondsPerLevel, timeBonus]);
 
   useEffect(() => {
-    if (passed || timedOut) {
+    if (!level.demo || !isDemoActive) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => setIsDemoActive(false), level.demo.durationMs);
+    return () => window.clearTimeout(timer);
+  }, [isDemoActive, level.demo]);
+
+  useEffect(() => {
+    if (passed || timedOut || isDemoActive) {
       return;
     }
 
@@ -69,7 +81,7 @@ export function GamePage({
     }, 1000);
 
     return () => window.clearTimeout(timer);
-  }, [passed, secondsLeft, timedOut]);
+  }, [isDemoActive, passed, secondsLeft, timedOut]);
 
   useEffect(() => {
     if (!passed && remainingObstacles === 0) {
@@ -79,7 +91,7 @@ export function GamePage({
   }, [onScoreChange, passed, remainingObstacles, rules.passBonusScore]);
 
   const handleTilePress = (row: number, col: number) => {
-    if (passed || timedOut) {
+    if (passed || timedOut || isDemoActive) {
       return;
     }
 
@@ -155,8 +167,10 @@ export function GamePage({
       </section>
       <p className="status-message obstacle-hint">{obstacleHint}</p>
 
-      <Board board={board} selected={selected} disabled={passed || timedOut} onTilePress={handleTilePress} />
+      <Board board={board} selected={selected} disabled={passed || timedOut || isDemoActive} onTilePress={handleTilePress} />
       <p className="status-message" aria-live="polite">{lastMessage}</p>
+
+      {level.demo && isDemoActive && <TutorialDemoOverlay boardSize={level.boardSize} demo={level.demo} />}
 
       {passed && (
         <Modal

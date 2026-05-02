@@ -66,6 +66,17 @@ export interface LevelConfig {
   passHint: string;
   videoTitle: string;
   videoMessage: string;
+  demo?: LevelDemoConfig;
+}
+
+export interface LevelDemoConfig {
+  title: string;
+  message: string;
+  durationMs: number;
+  obstacleType: ObstacleType;
+  matchTileType: TileType;
+  obstaclePosition: [number, number];
+  matchPositions: Array<[number, number]>;
 }
 
 export interface QuizQuestion {
