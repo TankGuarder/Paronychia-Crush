@@ -1,5 +1,12 @@
 import { playableTileTypes } from '../data/tiles';
-import type { BoardTile, MatchResult, TileType } from '../types/game';
+import type {
+  BoardCell,
+  BoardTile,
+  MatchResult,
+  ObstaclePlacement,
+  ObstacleType,
+  TileType,
+} from '../types/game';
 
 const MAX_BOARD_SIZE = 5;
 const MIN_BOARD_SIZE = 3;
@@ -26,17 +33,32 @@ const makeTile = (type: TileType = randomTileType()): BoardTile => ({
   type,
 });
 
-const createsImmediateMatch = (board: BoardTile[][], row: number, col: number, type: TileType) => {
+const makeTileCell = (type: TileType = randomTileType()): BoardCell => ({
+  kind: 'tile',
+  tile: makeTile(type),
+});
+
+const makeObstacleCell = (type: ObstacleType): BoardCell => ({
+  kind: 'obstacle',
+  obstacle: {
+    id: makeId(),
+    type,
+  },
+});
+
+const getCellTileType = (cell: BoardCell | undefined) => (cell?.kind === 'tile' ? cell.tile.type : undefined);
+
+const createsImmediateMatch = (board: BoardCell[][], row: number, col: number, type: TileType) => {
   const horizontal =
-    col >= 2 && board[row][col - 1]?.type === type && board[row][col - 2]?.type === type;
+    col >= 2 && getCellTileType(board[row][col - 1]) === type && getCellTileType(board[row][col - 2]) === type;
   const vertical =
-    row >= 2 && board[row - 1][col]?.type === type && board[row - 2][col]?.type === type;
+    row >= 2 && getCellTileType(board[row - 1][col]) === type && getCellTileType(board[row - 2][col]) === type;
   return horizontal || vertical;
 };
 
-export const createBoard = (requestedSize: number): BoardTile[][] => {
+export const createBoard = (requestedSize: number, obstacles: ObstaclePlacement[] = []): BoardCell[][] => {
   const boardSize = normalizeBoardSize(requestedSize);
-  const board: BoardTile[][] = [];
+  const board: BoardCell[][] = [];
 
   // 開局避免直接出現三連，讓玩家第一步更可控。
   for (let row = 0; row < boardSize; row += 1) {
@@ -46,9 +68,15 @@ export const createBoard = (requestedSize: number): BoardTile[][] => {
       while (createsImmediateMatch(board, row, col, type)) {
         type = randomTileType();
       }
-      board[row][col] = makeTile(type);
+      board[row][col] = makeTileCell(type);
     }
   }
+
+  obstacles.forEach((obstacle) => {
+    if (obstacle.row >= 0 && obstacle.row < boardSize && obstacle.col >= 0 && obstacle.col < boardSize) {
+      board[obstacle.row][obstacle.col] = makeObstacleCell(obstacle.type);
+    }
+  });
 
   return board;
 };
@@ -59,7 +87,10 @@ export const areAdjacent = (a: [number, number], b: [number, number]) => {
   return rowDiff + colDiff === 1;
 };
 
-export const swapTiles = (board: BoardTile[][], first: [number, number], second: [number, number]) => {
+export const canSwapCells = (board: BoardCell[][], first: [number, number], second: [number, number]) =>
+  board[first[0]]?.[first[1]]?.kind === 'tile' && board[second[0]]?.[second[1]]?.kind === 'tile';
+
+export const swapTiles = (board: BoardCell[][], first: [number, number], second: [number, number]) => {
   const next = board.map((row) => [...row]);
   const firstTile = next[first[0]][first[1]];
   next[first[0]][first[1]] = next[second[0]][second[1]];
@@ -67,7 +98,7 @@ export const swapTiles = (board: BoardTile[][], first: [number, number], second:
   return next;
 };
 
-const findMatches = (board: BoardTile[][]): Set<string> => {
+const findMatches = (board: BoardCell[][]): Set<string> => {
   const boardSize = board.length;
   const matched = new Set<string>();
 
@@ -75,10 +106,10 @@ const findMatches = (board: BoardTile[][]): Set<string> => {
   for (let row = 0; row < boardSize; row += 1) {
     let runStart = 0;
     for (let col = 1; col <= boardSize; col += 1) {
-      const current = board[row][col]?.type;
-      const previous = board[row][runStart]?.type;
+      const current = getCellTileType(board[row][col]);
+      const previous = getCellTileType(board[row][runStart]);
       if (current !== previous) {
-        if (col - runStart >= 3) {
+        if (previous && col - runStart >= 3) {
           for (let matchCol = runStart; matchCol < col; matchCol += 1) {
             matched.add(`${row}-${matchCol}`);
           }
@@ -91,10 +122,10 @@ const findMatches = (board: BoardTile[][]): Set<string> => {
   for (let col = 0; col < boardSize; col += 1) {
     let runStart = 0;
     for (let row = 1; row <= boardSize; row += 1) {
-      const current = board[row]?.[col]?.type;
-      const previous = board[runStart]?.[col]?.type;
+      const current = getCellTileType(board[row]?.[col]);
+      const previous = getCellTileType(board[runStart]?.[col]);
       if (current !== previous) {
-        if (row - runStart >= 3) {
+        if (previous && row - runStart >= 3) {
           for (let matchRow = runStart; matchRow < row; matchRow += 1) {
             matched.add(`${matchRow}-${col}`);
           }
@@ -107,30 +138,106 @@ const findMatches = (board: BoardTile[][]): Set<string> => {
   return matched;
 };
 
-const collapseBoard = (board: BoardTile[][], matched: Set<string>): BoardTile[][] => {
-  const boardSize = board.length;
-  const next: BoardTile[][] = Array.from({ length: boardSize }, () => Array<BoardTile>(boardSize));
+const canObstacleBeCleared = (obstacleType: ObstacleType, adjacentTileType: TileType) => {
+  if (obstacleType === 'woundedParonychia') {
+    return true;
+  }
 
-  // 每一欄由下往上保留未消除方塊，再從頂端補入新方塊。
-  for (let col = 0; col < boardSize; col += 1) {
-    const survivors: BoardTile[] = [];
-    for (let row = boardSize - 1; row >= 0; row -= 1) {
-      if (!matched.has(`${row}-${col}`)) {
-        survivors.push(board[row][col]);
-      }
+  return adjacentTileType !== 'cottonSwab';
+};
+
+const getAdjacentKeys = (row: number, col: number, boardSize: number) =>
+  [
+    [row - 1, col],
+    [row + 1, col],
+    [row, col - 1],
+    [row, col + 1],
+  ]
+    .filter(([nextRow, nextCol]) => nextRow >= 0 && nextRow < boardSize && nextCol >= 0 && nextCol < boardSize)
+    .map(([nextRow, nextCol]) => `${nextRow}-${nextCol}`);
+
+const findClearedObstacles = (board: BoardCell[][], matched: Set<string>) => {
+  const boardSize = board.length;
+  const cleared = new Set<string>();
+
+  matched.forEach((key) => {
+    const [row, col] = key.split('-').map(Number);
+    const matchedCell = board[row][col];
+
+    if (matchedCell.kind !== 'tile') {
+      return;
     }
 
-    for (let row = boardSize - 1; row >= 0; row -= 1) {
-      next[row][col] = survivors.shift() ?? makeTile();
+    getAdjacentKeys(row, col, boardSize).forEach((adjacentKey) => {
+      const [adjacentRow, adjacentCol] = adjacentKey.split('-').map(Number);
+      const adjacentCell = board[adjacentRow][adjacentCol];
+
+      if (
+        adjacentCell.kind === 'obstacle' &&
+        canObstacleBeCleared(adjacentCell.obstacle.type, matchedCell.tile.type)
+      ) {
+        cleared.add(adjacentKey);
+      }
+    });
+  });
+
+  return cleared;
+};
+
+const collapseBoard = (board: BoardCell[][], removed: Set<string>): BoardCell[][] => {
+  const boardSize = board.length;
+  const next: BoardCell[][] = Array.from({ length: boardSize }, () => Array<BoardCell>(boardSize));
+
+  // 障礙被消除後會變成可補牌空格；未消除的障礙會固定在原位置。
+  for (let col = 0; col < boardSize; col += 1) {
+    let row = boardSize - 1;
+
+    while (row >= 0) {
+      const key = `${row}-${col}`;
+      const cell = board[row][col];
+
+      if (cell.kind === 'obstacle' && !removed.has(key)) {
+        next[row][col] = cell;
+        row -= 1;
+        continue;
+      }
+
+      const segmentEnd = row;
+      while (row >= 0) {
+        const segmentKey = `${row}-${col}`;
+        const segmentCell = board[row][col];
+        if (segmentCell.kind === 'obstacle' && !removed.has(segmentKey)) {
+          break;
+        }
+        row -= 1;
+      }
+      const segmentStart = row + 1;
+      const survivors: BoardCell[] = [];
+
+      for (let segmentRow = segmentEnd; segmentRow >= segmentStart; segmentRow -= 1) {
+        const segmentKey = `${segmentRow}-${col}`;
+        const segmentCell = board[segmentRow][col];
+        if (segmentCell.kind === 'tile' && !removed.has(segmentKey)) {
+          survivors.push(segmentCell);
+        }
+      }
+
+      for (let segmentRow = segmentEnd; segmentRow >= segmentStart; segmentRow -= 1) {
+        next[segmentRow][col] = survivors.shift() ?? makeTileCell();
+      }
     }
   }
 
   return next;
 };
 
-export const resolveBoard = (board: BoardTile[][]): MatchResult => {
+const countObstacles = (board: BoardCell[][]) =>
+  board.flat().filter((cell) => cell.kind === 'obstacle').length;
+
+export const resolveBoard = (board: BoardCell[][]): MatchResult => {
   let nextBoard = board;
   let removedTotal = 0;
+  let clearedObstacles = 0;
   const removedCounts: Partial<Record<TileType, number>> = {};
 
   while (true) {
@@ -139,17 +246,31 @@ export const resolveBoard = (board: BoardTile[][]): MatchResult => {
       break;
     }
 
+    const cleared = findClearedObstacles(nextBoard, matched);
+    const removed = new Set([...matched, ...cleared]);
+
     matched.forEach((key) => {
       const [row, col] = key.split('-').map(Number);
-      const type = nextBoard[row][col].type;
-      removedCounts[type] = (removedCounts[type] ?? 0) + 1;
-      removedTotal += 1;
+      const cell = nextBoard[row][col];
+
+      if (cell.kind === 'tile') {
+        const type = cell.tile.type;
+        removedCounts[type] = (removedCounts[type] ?? 0) + 1;
+        removedTotal += 1;
+      }
     });
 
-    nextBoard = collapseBoard(nextBoard, matched);
+    clearedObstacles += cleared.size;
+    nextBoard = collapseBoard(nextBoard, removed);
   }
 
-  return { board: nextBoard, removedCounts, removedTotal };
+  return {
+    board: nextBoard,
+    removedCounts,
+    removedTotal,
+    clearedObstacles,
+    remainingObstacles: countObstacles(nextBoard),
+  };
 };
 
-export const hasAnyMatch = (board: BoardTile[][]) => findMatches(board).size > 0;
+export const hasAnyMatch = (board: BoardCell[][]) => findMatches(board).size > 0;

@@ -254,6 +254,14 @@ h2 {
   outline-offset: 1px;
 }
 
+.tile.obstacle {
+  border-color: #7a4b45;
+  box-shadow:
+    inset 0 -3px 0 rgba(122, 75, 69, 0.16),
+    0 0 0 3px rgba(255, 255, 255, 0.82);
+  cursor: not-allowed;
+}
+
 .tile-icon {
   display: block;
   width: 82%;
@@ -279,6 +287,20 @@ h2 {
 
 .tile-cottonSwab {
   background: #dfd2ea;
+}
+
+.obstacle-redParonychia {
+  background: #f4c4bd;
+}
+
+.obstacle-woundedParonychia {
+  background: #f0cdbd;
+}
+
+.obstacle-hint {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff8ef;
 }
 
 .status-message,

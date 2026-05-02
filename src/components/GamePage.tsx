@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { tileDefinitions } from '../data/tiles';
-import type { BoardTile, GameRules, LevelConfig, TileType } from '../types/game';
-import { areAdjacent, createBoard, resolveBoard, swapTiles } from '../utils/board';
+import { obstacleDefinitions } from '../data/obstacles';
+import type { BoardCell, GameRules, LevelConfig } from '../types/game';
+import { areAdjacent, canSwapCells, createBoard, resolveBoard, swapTiles } from '../utils/board';
 import { Board } from './Board';
 import { GameHeader } from './GameHeader';
 import { Modal } from './Modal';
@@ -27,28 +27,32 @@ export function GamePage({
   onTimeUpSettle,
   onTimeUpQuiz,
 }: GamePageProps) {
-  const [board, setBoard] = useState<BoardTile[][]>(() => createBoard(level.boardSize));
+  const [board, setBoard] = useState<BoardCell[][]>(() => createBoard(level.boardSize, level.obstacles));
   const [selected, setSelected] = useState<[number, number] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(rules.secondsPerLevel + timeBonus);
-  const [collected, setCollected] = useState(0);
+  const [remainingObstacles, setRemainingObstacles] = useState(level.obstacles.length);
   const [passed, setPassed] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [lastMessage, setLastMessage] = useState('選兩個相鄰方塊交換。');
 
-  const tileName = useMemo(
-    () => tileDefinitions.find((tile) => tile.id === level.goal.tileType)?.name ?? '目標方塊',
-    [level.goal.tileType],
+  const obstacleHint = useMemo(
+    () => obstacleDefinitions.map((obstacle) => `${obstacle.name}：${obstacle.hint}`).join(' '),
+    [],
   );
 
   useEffect(() => {
-    setBoard(createBoard(level.boardSize));
+    setBoard(createBoard(level.boardSize, level.obstacles));
     setSelected(null);
     setSecondsLeft(rules.secondsPerLevel + timeBonus);
-    setCollected(0);
+    setRemainingObstacles(level.obstacles.length);
     setPassed(false);
     setTimedOut(false);
-    setLastMessage(timeBonus > 0 ? `互動題答對，已增加 ${timeBonus} 秒。` : '選兩個相鄰方塊交換。');
-  }, [level.boardSize, level.levelId, rules.secondsPerLevel, timeBonus]);
+    setLastMessage(
+      timeBonus > 0
+        ? `互動題答對，已增加 ${timeBonus} 秒。請清除所有障礙。`
+        : '選兩個相鄰主方塊交換，三消時清除旁邊的障礙。',
+    );
+  }, [level.boardSize, level.levelId, level.obstacles, rules.secondsPerLevel, timeBonus]);
 
   useEffect(() => {
     if (passed || timedOut) {
@@ -68,18 +72,11 @@ export function GamePage({
   }, [passed, secondsLeft, timedOut]);
 
   useEffect(() => {
-    if (!passed && collected >= level.goal.count) {
+    if (!passed && remainingObstacles === 0) {
       setPassed(true);
       onScoreChange(rules.passBonusScore);
     }
-  }, [collected, level.goal.count, onScoreChange, passed, rules.passBonusScore]);
-
-  const addCollectedCounts = (counts: Partial<Record<TileType, number>>) => {
-    const targetCount = counts[level.goal.tileType] ?? 0;
-    if (targetCount > 0) {
-      setCollected((current) => Math.min(level.goal.count, current + targetCount));
-    }
-  };
+  }, [onScoreChange, passed, remainingObstacles, rules.passBonusScore]);
 
   const handleTilePress = (row: number, col: number) => {
     if (passed || timedOut) {
@@ -87,6 +84,10 @@ export function GamePage({
     }
 
     if (!selected) {
+      if (board[row][col].kind === 'obstacle') {
+        setLastMessage('障礙方塊不可交換，請選主方塊。');
+        return;
+      }
       setSelected([row, col]);
       return;
     }
@@ -98,8 +99,18 @@ export function GamePage({
     }
 
     if (!areAdjacent(selected, nextSelection)) {
+      if (board[row][col].kind === 'obstacle') {
+        setLastMessage('障礙方塊不可交換，請選主方塊。');
+        return;
+      }
       setSelected(nextSelection);
       setLastMessage('請選擇相鄰的兩個方塊。');
+      return;
+    }
+
+    if (!canSwapCells(board, selected, nextSelection)) {
+      setSelected(null);
+      setLastMessage('障礙方塊不可交換。');
       return;
     }
 
@@ -114,8 +125,12 @@ export function GamePage({
 
     setBoard(resolved.board);
     onScoreChange(resolved.removedTotal);
-    addCollectedCounts(resolved.removedCounts);
-    setLastMessage(`清除了 ${resolved.removedTotal} 個方塊。`);
+    setRemainingObstacles(resolved.remainingObstacles);
+    setLastMessage(
+      resolved.clearedObstacles > 0
+        ? `清除了 ${resolved.removedTotal} 個主方塊，並消除 ${resolved.clearedObstacles} 個障礙。`
+        : `清除了 ${resolved.removedTotal} 個主方塊。障礙需靠相鄰三消消除。`,
+    );
   };
 
   return (
@@ -135,9 +150,10 @@ export function GamePage({
           <p className="concept-text">核心觀念：{level.concept}</p>
         </div>
         <div className="progress-pill">
-          {tileName} {collected}/{level.goal.count}
+          剩餘障礙 {remainingObstacles}/{level.obstacles.length}
         </div>
       </section>
+      <p className="status-message obstacle-hint">{obstacleHint}</p>
 
       <Board board={board} selected={selected} disabled={passed || timedOut} onTilePress={handleTilePress} />
       <p className="status-message" aria-live="polite">{lastMessage}</p>
@@ -147,7 +163,7 @@ export function GamePage({
           title="過關"
           actions={<button className="primary-button" onClick={onLevelPassed}>觀看衛教影片</button>}
         >
-          <p>完成「{level.goal.label}」，過關獲得 {rules.passBonusScore} 分。</p>
+          <p>已清除本關所有障礙，過關獲得 {rules.passBonusScore} 分。</p>
           <p className="hint-text">{level.passHint}</p>
           <p>看完衛教影片後才能進下一關。</p>
         </Modal>
@@ -165,7 +181,7 @@ export function GamePage({
             </>
           }
         >
-          <p>本關尚未達成目標。若分數足夠，可花費 {rules.quizCostScore} 分回答互動題，答對會回到本關並增加 {rules.quizCorrectTimeBonus} 秒。</p>
+          <p>本關仍有障礙尚未清除。若分數足夠，可花費 {rules.quizCostScore} 分回答互動題，答對會回到本關並增加 {rules.quizCorrectTimeBonus} 秒。</p>
           {score < rules.quizCostScore && <p className="warning-text">目前分數不足 {rules.quizCostScore} 分，無法進入互動題。</p>}
         </Modal>
       )}

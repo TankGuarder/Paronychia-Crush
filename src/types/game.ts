@@ -19,9 +19,37 @@ export interface BoardTile {
   type: TileType;
 }
 
+export type ObstacleType = 'redParonychia' | 'woundedParonychia';
+
+export interface ObstacleDefinition {
+  id: ObstacleType;
+  name: string;
+  icon: string;
+  hint: string;
+}
+
+export interface ObstaclePlacement {
+  type: ObstacleType;
+  row: number;
+  col: number;
+}
+
+export interface BoardObstacle {
+  id: string;
+  type: ObstacleType;
+}
+
+export type BoardCell =
+  | {
+      kind: 'tile';
+      tile: BoardTile;
+    }
+  | {
+      kind: 'obstacle';
+      obstacle: BoardObstacle;
+    };
+
 export interface LevelGoal {
-  tileType: TileType;
-  count: number;
   label: string;
 }
 
@@ -32,6 +60,7 @@ export interface LevelConfig {
   boardSize: number;
   title: string;
   goal: LevelGoal;
+  obstacles: ObstaclePlacement[];
   targetText: string;
   concept: string;
   passHint: string;
@@ -58,9 +87,11 @@ export interface LeaderboardEntry {
 }
 
 export interface MatchResult {
-  board: BoardTile[][];
+  board: BoardCell[][];
   removedCounts: Partial<Record<TileType, number>>;
   removedTotal: number;
+  clearedObstacles: number;
+  remainingObstacles: number;
 }
 
 export interface GameRules {

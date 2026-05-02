@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">發紅甲溝炎手指</title>
+  <rect width="96" height="96" rx="22" fill="#F8E2DF"/>
+  <path d="M36 20c0-7 5-12 12-12s12 5 12 12v47c0 14-10 23-23 23H24c-6 0-10-4-10-10s4-10 10-10h9c2 0 3-1 3-3V20Z" fill="#F3B8AD"/>
+  <path d="M38 22c0-6 4-10 10-10s10 4 10 10v12H38V22Z" fill="#F7D2C7"/>
+  <path d="M36 39c8-5 17-5 24 0" stroke="#D7625B" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="48" cy="50" r="15" fill="#E77C73" opacity=".85"/>
+  <path d="M30 70h19" stroke="#27474D" stroke-width="5" stroke-linecap="round"/>
+  <path d="M67 28c4 5 6 11 6 18M23 32c-4 5-6 11-6 18" stroke="#D7625B" stroke-width="5" stroke-linecap="round"/>
+</svg>
