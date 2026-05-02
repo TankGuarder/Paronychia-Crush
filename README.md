@@ -2,6 +2,14 @@
 
 React + TypeScript + Vite 製作的前端三消衛教遊戲。研究版 MVP 使用固定關卡版本與固定規則，資料目前都使用本地設定檔與 localStorage，尚未串接正式後端。
 
+## 可遊玩網址
+
+GitHub Pages 部署完成後可開啟：
+
+```text
+https://tankguarder.github.io/Paronychia-Crush/
+```
+
 ## 啟動方式
 
 ```bash
