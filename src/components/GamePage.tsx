@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { obstacleDefinitions } from '../data/obstacles';
-import type { BoardCell, GameRules, LevelConfig, SuggestedMove } from '../types/game';
-import { areAdjacent, canSwapCells, createBoard, findSuggestedMove, resolveBoard, swapTiles } from '../utils/board';
+import type { BoardAnimationState, BoardCell, BoardPosition, GameRules, LevelConfig, SuggestedMove } from '../types/game';
+import {
+  areAdjacent,
+  canSwapCells,
+  countObstaclesByType,
+  createBoard,
+  ensurePlayableBoard,
+  findSuggestedMove,
+  hasAnyMatch,
+  resolveBoardStep,
+  swapTiles,
+} from '../utils/board';
 import { Board } from './Board';
 import { GameHeader } from './GameHeader';
 import { Modal } from './Modal';
@@ -29,20 +39,35 @@ export function GamePage({
   onTimeUpQuiz,
 }: GamePageProps) {
   const [board, setBoard] = useState<BoardCell[][]>(() => createBoard(level.boardSize, level.obstacles));
-  const [selected, setSelected] = useState<[number, number] | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(rules.secondsPerLevel + timeBonus);
   const [remainingObstacles, setRemainingObstacles] = useState(level.obstacles.length);
   const [passed, setPassed] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
-  const [lastMessage, setLastMessage] = useState('請交換相鄰方塊，讓三個以上相同圖示連成一線。');
+  const [lastMessage, setLastMessage] = useState('請滑動主方塊，朝相鄰方塊交換並形成三消。');
   const [isDemoActive, setIsDemoActive] = useState(Boolean(level.demo));
   const [hintMove, setHintMove] = useState<SuggestedMove | null>(null);
   const [interactionTick, setInteractionTick] = useState(0);
+  const [animation, setAnimation] = useState<BoardAnimationState | null>(null);
+  const [isResolving, setIsResolving] = useState(false);
+
+  const wait = (durationMs: number) => new Promise((resolve) => window.setTimeout(resolve, durationMs));
 
   const obstacleHint = useMemo(
     () => obstacleDefinitions.map((obstacle) => `${obstacle.name}：${obstacle.hint}`).join(' '),
     [],
   );
+
+  const obstacleMap = useMemo(
+    () => new Map(obstacleDefinitions.map((obstacle) => [obstacle.id, obstacle])),
+    [],
+  );
+
+  const levelObstacleTypes = useMemo(
+    () => [...new Set(level.obstacles.map((obstacle) => obstacle.type))],
+    [level.obstacles],
+  );
+
+  const remainingObstacleCounts = useMemo(() => countObstaclesByType(board), [board]);
 
   const clearIdleHint = () => {
     setHintMove(null);
@@ -51,18 +76,19 @@ export function GamePage({
 
   useEffect(() => {
     setBoard(createBoard(level.boardSize, level.obstacles));
-    setSelected(null);
     setSecondsLeft(rules.secondsPerLevel + timeBonus);
     setRemainingObstacles(level.obstacles.length);
     setPassed(false);
     setTimedOut(false);
     setIsDemoActive(Boolean(level.demo));
     setHintMove(null);
+    setAnimation(null);
+    setIsResolving(false);
     setInteractionTick((current) => current + 1);
     setLastMessage(
       timeBonus > 0
         ? `互動題答對，增加 ${timeBonus} 秒，繼續挑戰。`
-        : '請交換相鄰方塊，讓三個以上相同圖示連成一線。',
+        : '請滑動主方塊，朝相鄰方塊交換並形成三消。',
     );
   }, [level.boardSize, level.demo, level.levelId, level.obstacles, rules.secondsPerLevel, timeBonus]);
 
@@ -76,7 +102,7 @@ export function GamePage({
   }, [isDemoActive, level.demo]);
 
   useEffect(() => {
-    if (passed || timedOut || isDemoActive) {
+    if (passed || timedOut || isDemoActive || isResolving) {
       return;
     }
 
@@ -90,10 +116,10 @@ export function GamePage({
     }, 1000);
 
     return () => window.clearTimeout(timer);
-  }, [isDemoActive, passed, secondsLeft, timedOut]);
+  }, [isDemoActive, isResolving, passed, secondsLeft, timedOut]);
 
   useEffect(() => {
-    if (passed || timedOut || isDemoActive) {
+    if (passed || timedOut || isDemoActive || isResolving) {
       setHintMove(null);
       return;
     }
@@ -103,7 +129,7 @@ export function GamePage({
     }, 3000);
 
     return () => window.clearTimeout(timer);
-  }, [board, interactionTick, isDemoActive, passed, timedOut]);
+  }, [board, interactionTick, isDemoActive, isResolving, passed, timedOut]);
 
   useEffect(() => {
     if (!passed && remainingObstacles === 0) {
@@ -113,61 +139,94 @@ export function GamePage({
     }
   }, [onScoreChange, passed, remainingObstacles, rules.passBonusScore]);
 
-  const handleTilePress = (row: number, col: number) => {
-    if (passed || timedOut || isDemoActive) {
+  const playResolutionAnimation = async (startBoard: BoardCell[][]) => {
+    let currentBoard = startBoard;
+    let removedTotal = 0;
+    let clearedObstacles = 0;
+
+    setIsResolving(true);
+    setHintMove(null);
+
+    while (true) {
+      const step = resolveBoardStep(currentBoard);
+
+      if (!step) {
+        break;
+      }
+
+      removedTotal += step.removedTotal;
+      clearedObstacles += step.clearedObstacles;
+
+      setAnimation({
+        removingKeys: step.animation.removingKeys,
+        droppingKeys: [],
+        newTileKeys: [],
+      });
+      await wait(180);
+
+      setBoard(step.board);
+      setAnimation({
+        removingKeys: [],
+        droppingKeys: step.animation.droppingKeys,
+        newTileKeys: step.animation.newTileKeys,
+      });
+      onScoreChange(step.removedTotal);
+      setRemainingObstacles(step.remainingObstacles);
+      currentBoard = step.board;
+      await wait(260);
+    }
+
+    const playableBoard = ensurePlayableBoard(currentBoard);
+    if (playableBoard !== currentBoard) {
+      setBoard(playableBoard);
+      setLastMessage('盤面已自動洗牌，保留目前障礙進度。');
+      await wait(120);
+    } else if (removedTotal > 0) {
+      setLastMessage(
+        clearedObstacles > 0
+          ? `消除 ${removedTotal} 個方塊，並清除 ${clearedObstacles} 個障礙。`
+          : `消除 ${removedTotal} 個方塊，繼續清除障礙。`,
+      );
+    }
+
+    setAnimation(null);
+    setIsResolving(false);
+    setInteractionTick((current) => current + 1);
+  };
+
+  const handleTileSwipe = async (from: BoardPosition, to: BoardPosition) => {
+    if (passed || timedOut || isDemoActive || isResolving) {
       return;
     }
 
     clearIdleHint();
 
-    if (!selected) {
-      if (board[row][col].kind === 'obstacle') {
-        setLastMessage('障礙不能交換，請消除旁邊的主要方塊。');
-        return;
-      }
-      setSelected([row, col]);
+    if (!areAdjacent(from, to)) {
+      setLastMessage('請朝上下左右相鄰方塊滑動交換。');
       return;
     }
 
-    const nextSelection: [number, number] = [row, col];
-    if (selected[0] === row && selected[1] === col) {
-      setSelected(null);
+    if (!canSwapCells(board, from, to)) {
+      setLastMessage('障礙不能交換，請滑動主要方塊。');
       return;
     }
 
-    if (!areAdjacent(selected, nextSelection)) {
-      if (board[row][col].kind === 'obstacle') {
-        setLastMessage('障礙不能交換，請消除旁邊的主要方塊。');
-        return;
-      }
-      setSelected(nextSelection);
-      setLastMessage('請選擇相鄰的兩個方塊交換。');
+    const previousBoard = board;
+    const swapped = swapTiles(board, from, to);
+    setBoard(swapped);
+
+    if (!hasAnyMatch(swapped)) {
+      setIsResolving(true);
+      setLastMessage('這次交換沒有形成三消，方塊會回到原位。');
+      await wait(180);
+      setBoard(previousBoard);
+      await wait(160);
+      setIsResolving(false);
+      setInteractionTick((current) => current + 1);
       return;
     }
 
-    if (!canSwapCells(board, selected, nextSelection)) {
-      setSelected(null);
-      setLastMessage('障礙不能交換。');
-      return;
-    }
-
-    const swapped = swapTiles(board, selected, nextSelection);
-    const resolved = resolveBoard(swapped);
-    setSelected(null);
-
-    if (resolved.removedTotal === 0) {
-      setLastMessage('這次交換沒有形成三消，請再試一次。');
-      return;
-    }
-
-    setBoard(resolved.board);
-    onScoreChange(resolved.removedTotal);
-    setRemainingObstacles(resolved.remainingObstacles);
-    setLastMessage(
-      resolved.clearedObstacles > 0
-        ? `消除 ${resolved.removedTotal} 個方塊，並清除 ${resolved.clearedObstacles} 個障礙。`
-        : `消除 ${resolved.removedTotal} 個方塊，繼續清除障礙。`,
-    );
+    void playResolutionAnimation(swapped);
   };
 
   return (
@@ -192,12 +251,33 @@ export function GamePage({
       </section>
       <p className="status-message obstacle-hint">{obstacleHint}</p>
 
+      <section className="target-tray" aria-label="本關剩餘障礙">
+        <span className="target-tray-title">目標</span>
+        <div className="target-list">
+          {levelObstacleTypes.map((type) => {
+            const obstacle = obstacleMap.get(type);
+            const count = remainingObstacleCounts[type] ?? 0;
+
+            return (
+              <div className={`target-item target-${type} ${count === 0 ? 'cleared' : ''}`} key={type}>
+                {obstacle?.icon && <img src={obstacle.icon} alt="" aria-hidden="true" />}
+                <span>{obstacle?.name ?? '障礙'}</span>
+                <strong>{count}</strong>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       <Board
         board={board}
-        selected={selected}
         hintMove={hintMove}
-        disabled={passed || timedOut || isDemoActive}
-        onTilePress={handleTilePress}
+        animation={animation}
+        disabled={passed || timedOut || isDemoActive || isResolving}
+        onInteractionStart={clearIdleHint}
+        onTileSwipe={(from, to) => {
+          void handleTileSwipe(from, to);
+        }}
       />
       <p className="status-message" aria-live="polite">
         {lastMessage}

@@ -21,6 +21,8 @@ export interface BoardTile {
 
 export type ObstacleType = 'redParonychia' | 'woundedParonychia';
 
+export type ObstacleCounts = Partial<Record<ObstacleType, number>>;
+
 export interface ObstacleDefinition {
   id: ObstacleType;
   name: string;
@@ -103,6 +105,21 @@ export interface LeaderboardEntry {
 
 export interface MatchResult {
   board: BoardCell[][];
+  removedCounts: Partial<Record<TileType, number>>;
+  removedTotal: number;
+  clearedObstacles: number;
+  remainingObstacles: number;
+}
+
+export interface BoardAnimationState {
+  removingKeys: string[];
+  droppingKeys: string[];
+  newTileKeys: string[];
+}
+
+export interface BoardResolutionStep {
+  board: BoardCell[][];
+  animation: BoardAnimationState;
   removedCounts: Partial<Record<TileType, number>>;
   removedTotal: number;
   clearedObstacles: number;
