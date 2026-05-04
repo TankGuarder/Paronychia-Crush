@@ -449,13 +449,11 @@ h2 {
   aspect-ratio: 1;
   min-width: 0;
   padding: clamp(5px, 1.6vw, 8px);
-  border: 4px solid rgba(255, 255, 255, 0.82);
+  border: 0;
   border-radius: 20px;
+  background: transparent;
   color: #3b255b;
-  box-shadow:
-    inset 0 5px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -8px 0 rgba(65, 32, 84, 0.16),
-    0 7px 0 rgba(52, 26, 96, 0.22);
+  box-shadow: none;
   overflow: visible;
   touch-action: none;
   user-select: none;
@@ -491,7 +489,7 @@ h2 {
 }
 
 .tile.obstacle {
-  border-color: #fff4cf;
+  border: 4px solid #fff4cf;
   box-shadow:
     inset 0 5px 0 rgba(255, 255, 255, 0.44),
     inset 0 -9px 0 rgba(123, 45, 63, 0.2),
@@ -520,6 +518,14 @@ h2 {
   filter: drop-shadow(0 5px 3px rgba(64, 28, 78, 0.2));
 }
 
+.tile:not(.obstacle) .tile-icon {
+  width: 96%;
+  height: 96%;
+  filter:
+    drop-shadow(0 2px 0 rgba(255, 255, 255, 0.68))
+    drop-shadow(0 7px 5px rgba(64, 28, 78, 0.28));
+}
+
 .idle-hand {
   position: absolute;
   right: -10px;
@@ -543,23 +549,23 @@ h2 {
 }
 
 .tile-ointment {
-  background: linear-gradient(180deg, #ffced3, #ff8c9c);
+  background: transparent;
 }
 
 .tile-socks {
-  background: linear-gradient(180deg, #d4f4ff, #6fc7f6);
+  background: transparent;
 }
 
 .tile-gloves {
-  background: linear-gradient(180deg, #fff29e, #f2bd43);
+  background: transparent;
 }
 
 .tile-lotion {
-  background: linear-gradient(180deg, #dfffe7, #72d99a);
+  background: transparent;
 }
 
 .tile-cottonSwab {
-  background: linear-gradient(180deg, #eee2ff, #b796f5);
+  background: transparent;
 }
 
 .obstacle-redParonychia {
