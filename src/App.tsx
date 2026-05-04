@@ -78,7 +78,7 @@ export default function App() {
 
   const finishRun = useCallback(() => {
     const entry: LeaderboardEntry = {
-      nickname: nickname.trim() || '未命名玩家',
+      nickname: nickname.trim(),
       lineUserId,
       score,
       completedLevel,
@@ -157,7 +157,7 @@ export default function App() {
   if (screen === 'summary') {
     return (
       <SummaryPage
-        nickname={nickname.trim() || '未命名玩家'}
+        nickname={nickname.trim() || '本次玩家'}
         score={score}
         completedLevel={completedLevel}
         leaderboard={leaderboard}

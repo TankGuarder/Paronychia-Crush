@@ -40,7 +40,6 @@ export function GamePage({
 }: GamePageProps) {
   const [board, setBoard] = useState<BoardCell[][]>(() => createBoard(level.boardSize, level.obstacles));
   const [secondsLeft, setSecondsLeft] = useState(rules.secondsPerLevel + timeBonus);
-  const [remainingObstacles, setRemainingObstacles] = useState(level.obstacles.length);
   const [passed, setPassed] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [lastMessage, setLastMessage] = useState('請滑動主方塊，朝相鄰方塊交換並形成三消。');
@@ -68,6 +67,10 @@ export function GamePage({
   );
 
   const remainingObstacleCounts = useMemo(() => countObstaclesByType(board), [board]);
+  const remainingObstacleTotal = useMemo(
+    () => Object.values(remainingObstacleCounts).reduce((total, count) => total + (count ?? 0), 0),
+    [remainingObstacleCounts],
+  );
 
   const clearIdleHint = () => {
     setHintMove(null);
@@ -77,7 +80,6 @@ export function GamePage({
   useEffect(() => {
     setBoard(createBoard(level.boardSize, level.obstacles));
     setSecondsLeft(rules.secondsPerLevel + timeBonus);
-    setRemainingObstacles(level.obstacles.length);
     setPassed(false);
     setTimedOut(false);
     setIsDemoActive(Boolean(level.demo));
@@ -132,12 +134,12 @@ export function GamePage({
   }, [board, interactionTick, isDemoActive, isResolving, passed, timedOut]);
 
   useEffect(() => {
-    if (!passed && remainingObstacles === 0) {
+    if (!passed && remainingObstacleTotal === 0) {
       setPassed(true);
       setHintMove(null);
       onScoreChange(rules.passBonusScore);
     }
-  }, [onScoreChange, passed, remainingObstacles, rules.passBonusScore]);
+  }, [onScoreChange, passed, remainingObstacleTotal, rules.passBonusScore]);
 
   const playResolutionAnimation = async (startBoard: BoardCell[][]) => {
     let currentBoard = startBoard;
@@ -171,7 +173,6 @@ export function GamePage({
         newTileKeys: step.animation.newTileKeys,
       });
       onScoreChange(step.removedTotal);
-      setRemainingObstacles(step.remainingObstacles);
       currentBoard = step.board;
       await wait(260);
     }
@@ -246,7 +247,7 @@ export function GamePage({
           <p className="concept-text">本關重點：{level.concept}</p>
         </div>
         <div className="progress-pill">
-          剩餘障礙 {remainingObstacles}/{level.obstacles.length}
+          剩餘障礙 {remainingObstacleTotal}/{level.obstacles.length}
         </div>
       </section>
       <p className="status-message obstacle-hint">{obstacleHint}</p>
