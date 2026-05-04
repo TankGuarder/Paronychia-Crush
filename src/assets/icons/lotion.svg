@@ -1,10 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
   <title id="title">乳液瓶圖示</title>
-  <rect width="96" height="96" rx="22" fill="#E5F3E8"/>
-  <rect x="33" y="30" width="32" height="54" rx="11" fill="#9CCFA5"/>
-  <rect x="39" y="18" width="20" height="13" rx="4" fill="#6CAF86"/>
-  <path d="M48 18h19c4 0 7 3 7 7v4" fill="none" stroke="#27474D" stroke-width="5" stroke-linecap="round"/>
-  <rect x="38" y="48" width="22" height="20" rx="7" fill="#F8FCF8"/>
-  <path d="M49 51c6 7 9 11 9 15a9 9 0 0 1-18 0c0-4 3-8 9-15Z" fill="#86C6CE"/>
-  <path d="M39 38h20" stroke="#27474D" stroke-width="5" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="bottle" x1="30" x2="69" y1="16" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8FFF1"/>
+      <stop offset=".56" stop-color="#8CE2A5"/>
+      <stop offset="1" stop-color="#3DA66E"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="135%">
+      <feDropShadow dx="0" dy="5" stdDeviation="3" flood-color="#2C7659" flood-opacity=".25"/>
+    </filter>
+  </defs>
+  <ellipse cx="49" cy="84" rx="26" ry="8" fill="#2C7659" opacity=".18"/>
+  <g filter="url(#shadow)">
+    <path d="M39 22h20v11c9 4 15 13 15 24v17c0 8-6 14-14 14H38c-8 0-14-6-14-14V57c0-11 6-20 15-24V22Z" fill="url(#bottle)"/>
+    <path d="M37 13h24c3 0 5 2 5 5s-2 5-5 5H37c-3 0-5-2-5-5s2-5 5-5Z" fill="#58B4D5"/>
+    <path d="M43 8h18v7H43z" fill="#2B83B4"/>
+    <rect x="33" y="49" width="32" height="24" rx="8" fill="#FFF6C7"/>
+    <path d="M41 60h16" stroke="#42A36C" stroke-width="5" stroke-linecap="round"/>
+    <path d="M34 40c-4 5-6 11-6 19v12" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+    <path d="M56 16h19" stroke="#2B83B4" stroke-width="5" stroke-linecap="round"/>
+  </g>
 </svg>

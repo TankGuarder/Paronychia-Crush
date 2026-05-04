@@ -1,10 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
   <title id="title">藥膏管圖示</title>
-  <rect width="96" height="96" rx="22" fill="#F8E5E2"/>
-  <path d="M21 66 55 32l24 24-34 34c-6 6-16 6-22 0l-2-2c-6-6-6-16 0-22Z" fill="#F6B8B0"/>
-  <path d="M53 31 65 19c3-3 8-3 12 0l1 1c3 4 3 9 0 12L66 44 53 31Z" fill="#8DC4CC"/>
-  <path d="M47 38 60 51" stroke="#27474D" stroke-width="5" stroke-linecap="round"/>
-  <path d="M30 65c5-5 13-5 18 0l5 5-8 8c-4 4-10 4-14 0l-1-1c-3-3-3-8 0-12Z" fill="#FFF7F4"/>
-  <path d="M33 70h14" stroke="#D96F67" stroke-width="5" stroke-linecap="round"/>
-  <path d="M67 21 77 31" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+  <defs>
+    <linearGradient id="tube" x1="18" x2="76" y1="76" y2="18" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF8F91"/>
+      <stop offset=".58" stop-color="#FFD2C5"/>
+      <stop offset="1" stop-color="#FFF7E8"/>
+    </linearGradient>
+    <linearGradient id="cap" x1="55" x2="81" y1="41" y2="15" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#48AFC7"/>
+      <stop offset="1" stop-color="#B9EFF3"/>
+    </linearGradient>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="135%">
+      <feDropShadow dx="0" dy="5" stdDeviation="3" flood-color="#8A4A72" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <path d="M18 71 57 32l25 25-39 24c-7 7-18 7-25 0-3-3-3-7 0-10Z" fill="#C86D88" opacity=".25"/>
+  <g filter="url(#shadow)">
+    <path d="M19 66 55 30l25 25-36 36c-7 4-18 2-24-4l-4-4c-5-6-3-13 3-17Z" fill="url(#tube)"/>
+    <path d="M54 29 65 18c4-4 11-4 15 0l2 2c4 4 4 11 0 15L70 47 54 29Z" fill="url(#cap)"/>
+    <path d="M49 36 65 52" stroke="#7B3D65" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M30 66c5-5 13-5 18 0l5 5-8 8c-4 4-10 4-14 0l-2-2c-3-3-3-8 1-11Z" fill="#FFF8ED"/>
+    <path d="M34 70h15" stroke="#EE6F7B" stroke-width="5" stroke-linecap="round"/>
+    <path d="M67 20 79 32" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+    <path d="M25 63 55 33" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+  </g>
 </svg>
