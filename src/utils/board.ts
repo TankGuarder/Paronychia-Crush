@@ -11,9 +11,9 @@ import type {
   TileType,
 } from '../types/game';
 
-const MAX_BOARD_SIZE = 5;
+const MAX_BOARD_SIZE = 15;
 const MIN_BOARD_SIZE = 3;
-const MAX_PLAYABLE_BOARD_ATTEMPTS = 200;
+const MAX_PLAYABLE_BOARD_ATTEMPTS = 500;
 
 export const maxBoardSize = MAX_BOARD_SIZE;
 

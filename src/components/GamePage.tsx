@@ -58,15 +58,7 @@ export function GamePage({
     [],
   );
 
-  const obstacleMap = useMemo(
-    () => new Map(obstacleDefinitions.map((obstacle) => [obstacle.id, obstacle])),
-    [],
-  );
-
-  const levelObstacleTypes = useMemo(
-    () => [...new Set(level.obstacles.map((obstacle) => obstacle.type))],
-    [level.obstacles],
-  );
+  const primaryObstacle = obstacleDefinitions[0];
 
   const remainingObstacleCounts = useMemo(() => countObstaclesByType(board), [board]);
   const remainingObstacleTotal = useMemo(
@@ -257,18 +249,11 @@ export function GamePage({
       <section className="target-tray" aria-label="本關剩餘障礙">
         <span className="target-tray-title">目標</span>
         <div className="target-list">
-          {levelObstacleTypes.map((type) => {
-            const obstacle = obstacleMap.get(type);
-            const count = remainingObstacleCounts[type] ?? 0;
-
-            return (
-              <div className={`target-item target-${type} ${count === 0 ? 'cleared' : ''}`} key={type}>
-                {obstacle?.icon && <img src={obstacle.icon} alt="" aria-hidden="true" />}
-                <span>{obstacle?.name ?? '障礙'}</span>
-                <strong>{count}</strong>
-              </div>
-            );
-          })}
+          <div className={`target-item target-obstacle ${remainingObstacleTotal === 0 ? 'cleared' : ''}`}>
+            {primaryObstacle?.icon && <img src={primaryObstacle.icon} alt="" aria-hidden="true" />}
+            <span>{primaryObstacle?.name ?? '障礙'}</span>
+            <strong>{remainingObstacleTotal}</strong>
+          </div>
         </div>
       </section>
 
