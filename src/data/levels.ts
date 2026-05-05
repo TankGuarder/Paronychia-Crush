@@ -22,7 +22,7 @@ export const levels: LevelConfig[] = [
     videoMessage: '清潔後薄擦藥膏即可，若疼痛或化膿加重，請回診評估。',
     demo: {
       title: '教學：清除發紅障礙',
-      message: '讓發紅手指旁邊的主方塊形成三消，就能清除障礙。棉棒不能清除發紅障礙。',
+      message: '讓手指旁邊的任何主方塊形成消除，就能清除相鄰障礙。',
       durationMs: 4200,
       obstacleType: 'redParonychia',
       matchTileType: 'ointment',
@@ -73,7 +73,7 @@ export const levels: LevelConfig[] = [
     videoMessage: '做清潔、洗碗或接觸刺激性清潔劑時，戴手套能降低發炎機會。',
     demo: {
       title: '教學：清除有傷口障礙',
-      message: '有傷口手指旁邊的任何主方塊形成三消，都可以清除障礙。',
+      message: '讓手指旁邊的任何主方塊形成消除，就能清除相鄰障礙。',
       durationMs: 4200,
       obstacleType: 'woundedParonychia',
       matchTileType: 'cottonSwab',

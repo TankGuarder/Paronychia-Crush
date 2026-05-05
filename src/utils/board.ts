@@ -142,14 +142,6 @@ const findMatches = (board: BoardCell[][]): Set<string> => {
   return matched;
 };
 
-const canObstacleBeCleared = (obstacleType: ObstacleType, adjacentTileType: TileType) => {
-  if (obstacleType === 'woundedParonychia') {
-    return true;
-  }
-
-  return adjacentTileType !== 'cottonSwab';
-};
-
 const getAdjacentKeys = (row: number, col: number, boardSize: number) =>
   [
     [row - 1, col],
@@ -164,23 +156,20 @@ const findClearedObstacles = (board: BoardCell[][], matched: Set<string>) => {
   const boardSize = board.length;
   const cleared = new Set<string>();
 
-  matched.forEach((key) => {
-    const [row, col] = key.split('-').map(Number);
-    const matchedCell = board[row][col];
+  board.forEach((row, rowIndex) => {
+    row.forEach((cell, colIndex) => {
+      if (cell.kind !== 'obstacle') {
+        return;
+      }
 
-    if (matchedCell.kind !== 'tile') {
-      return;
-    }
+      // All obstacle types share the same rule: if any four-way adjacent main tile
+      // is in this match set, clear the obstacle in this resolution step.
+      const hasAdjacentMatchedTile = getAdjacentKeys(rowIndex, colIndex, boardSize).some((adjacentKey) =>
+        matched.has(adjacentKey),
+      );
 
-    getAdjacentKeys(row, col, boardSize).forEach((adjacentKey) => {
-      const [adjacentRow, adjacentCol] = adjacentKey.split('-').map(Number);
-      const adjacentCell = board[adjacentRow][adjacentCol];
-
-      if (
-        adjacentCell.kind === 'obstacle' &&
-        canObstacleBeCleared(adjacentCell.obstacle.type, matchedCell.tile.type)
-      ) {
-        cleared.add(adjacentKey);
+      if (hasAdjacentMatchedTile) {
+        cleared.add(`${rowIndex}-${colIndex}`);
       }
     });
   });

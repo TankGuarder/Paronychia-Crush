@@ -7,12 +7,12 @@ export const obstacleDefinitions: ObstacleDefinition[] = [
     id: 'redParonychia',
     name: '發紅甲溝炎手指',
     icon: redParonychiaIcon,
-    hint: '相鄰的藥膏、襪子、手套或乳液三消時可以清除；棉棒不能清除。',
+    hint: '四方向相鄰的任何主方塊被消除時，就可以清除。',
   },
   {
     id: 'woundedParonychia',
     name: '有傷口的甲溝炎手指',
     icon: woundedParonychiaIcon,
-    hint: '相鄰的任何主方塊三消時都可以清除。',
+    hint: '四方向相鄰的任何主方塊被消除時，就可以清除。',
   },
 ];
