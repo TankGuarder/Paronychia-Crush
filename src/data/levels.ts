@@ -71,19 +71,6 @@ export const levels: LevelConfig[] = [
     passHint: '清潔或碰水時戴手套，可保護甲溝皮膚。',
     videoTitle: '手套保護',
     videoMessage: '做清潔、洗碗或接觸刺激性清潔劑時，戴手套能降低發炎機會。',
-    demo: {
-      title: '教學：清除有傷口障礙',
-      message: '讓手指旁邊的任何主方塊形成消除，就能清除相鄰障礙。',
-      durationMs: 4200,
-      obstacleType: 'woundedParonychia',
-      matchTileType: 'cottonSwab',
-      obstaclePosition: [2, 1],
-      matchPositions: [
-        [1, 2],
-        [2, 2],
-        [3, 2],
-      ],
-    },
   },
   {
     levelId: 'L04',

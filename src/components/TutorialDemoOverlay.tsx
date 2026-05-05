@@ -23,7 +23,7 @@ export function TutorialDemoOverlay({ boardSize, demo }: TutorialDemoOverlayProp
   return (
     <div className="demo-backdrop" role="dialog" aria-modal="true" aria-label={demo.title}>
       <section className="demo-panel">
-        <p className="eyebrow">關卡示範</p>
+        <p className="eyebrow">操作示範</p>
         <h2>{demo.title}</h2>
         <p>{demo.message}</p>
         <div
@@ -50,8 +50,11 @@ export function TutorialDemoOverlay({ boardSize, demo }: TutorialDemoOverlayProp
               </div>
             );
           })}
-          <span className="demo-arrow">➜</span>
-          <span className="demo-hand">點</span>
+          <span className="demo-arrow">→</span>
+          <span className="demo-hand gesture-hand">
+            <span className="gesture-trail" />
+            <span className="gesture-finger" />
+          </span>
         </div>
         <div className="demo-progress" style={progressStyle} />
       </section>

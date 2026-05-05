@@ -17,6 +17,8 @@ import { GameHeader } from './GameHeader';
 import { Modal } from './Modal';
 import { TutorialDemoOverlay } from './TutorialDemoOverlay';
 
+const idleHintDelayMs = 5000;
+
 interface GamePageProps {
   level: LevelConfig;
   score: number;
@@ -128,7 +130,7 @@ export function GamePage({
 
     const timer = window.setTimeout(() => {
       setHintMove(findSuggestedMove(board));
-    }, 3000);
+    }, idleHintDelayMs);
 
     return () => window.clearTimeout(timer);
   }, [board, interactionTick, isDemoActive, isResolving, passed, timedOut]);

@@ -161,8 +161,9 @@ export function Board({ board, hintMove, animation, disabled, onInteractionStart
             >
               {definition?.icon && <img className="tile-icon" src={definition.icon} alt="" aria-hidden="true" />}
               {hintIndex === 1 && (
-                <span className="idle-hand" aria-hidden="true">
-                  點
+                <span className="idle-hand gesture-hand" aria-hidden="true">
+                  <span className="gesture-trail" />
+                  <span className="gesture-finger" />
                 </span>
               )}
             </button>
