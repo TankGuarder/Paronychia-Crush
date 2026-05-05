@@ -580,7 +580,7 @@ h2 {
 .board {
   display: grid;
   gap: clamp(2px, 0.8vw, 4px);
-  width: min(100%, 86vh, 680px);
+  width: min(100%, 78vh, 560px);
   margin: 0 auto;
   padding: clamp(8px, 2.2vw, 16px);
   border: 6px solid #b86124;
@@ -654,15 +654,29 @@ h2 {
 }
 
 .tile.removing {
-  animation: tileRemove 180ms ease-in forwards;
+  animation: tileRemove 240ms ease-in forwards;
+}
+
+.tile.removing-main::after {
+  position: absolute;
+  inset: 18%;
+  z-index: 4;
+  border: 3px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  box-shadow:
+    0 0 12px rgba(255, 244, 141, 0.52),
+    inset 0 0 10px rgba(255, 255, 255, 0.42);
+  pointer-events: none;
+  content: "";
+  animation: bubblePop 240ms ease-out forwards;
 }
 
 .tile.dropping {
-  animation: tileDrop 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: tileDrop 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .tile.new-tile {
-  animation: tileNewDrop 260ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation: tileNewDrop 340ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .tile-icon {
@@ -815,14 +829,33 @@ h2 {
 }
 
 @keyframes tileRemove {
+  20% {
+    opacity: 0.94;
+    transform: scale(1.12);
+    filter: brightness(1.2);
+  }
   45% {
     opacity: 0.72;
-    transform: scale(1.08);
+    transform: scale(1.06);
     filter: brightness(1.18);
   }
   100% {
     opacity: 0;
     transform: scale(0.2) rotate(6deg);
+  }
+}
+
+@keyframes bubblePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.42);
+  }
+  28% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.68);
   }
 }
 
@@ -893,6 +926,30 @@ h2 {
     inset 0 -9px 0 rgba(45, 23, 105, 0.3);
 }
 
+.demo-swipe-svg {
+  position: absolute;
+  inset: 12px;
+  z-index: 6;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.demo-swipe-svg line {
+  stroke: rgba(255, 255, 255, 0.84);
+  stroke-width: 3.6;
+  stroke-linecap: round;
+  stroke-dasharray: 7 5;
+  filter: drop-shadow(0 3px 0 rgba(77, 39, 130, 0.34));
+  animation: demoSwipeTrace 1.45s ease-in-out infinite;
+}
+
+.demo-swipe-svg circle {
+  fill: #fff45d;
+  stroke: #7a3fd2;
+  stroke-width: 1.4;
+  filter: drop-shadow(0 2px 0 rgba(64, 31, 112, 0.28));
+}
+
 .demo-cell {
   position: relative;
   display: grid;
@@ -954,13 +1011,14 @@ h2 {
 
 .demo-hand {
   position: absolute;
-  right: 12px;
-  bottom: 12px;
+  left: var(--demo-hand-left, 50%);
+  top: var(--demo-hand-top, 50%);
+  z-index: 7;
   display: grid;
   place-items: center;
   width: 62px;
   height: 70px;
-  animation: demoHand 1.1s ease-in-out infinite;
+  animation: demoHandSwipe 1.45s ease-in-out infinite;
 }
 
 .demo-progress {
@@ -993,15 +1051,28 @@ h2 {
   }
 }
 
-@keyframes demoArrow {
+@keyframes demoSwipeTrace {
   50% {
-    transform: translate(-40%, -50%);
+    stroke-dashoffset: -18;
+    opacity: 0.62;
   }
 }
 
-@keyframes demoHand {
-  50% {
-    transform: translate(-10px, -8px) rotate(-4deg);
+@keyframes demoHandSwipe {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, 0) rotate(-4deg) scale(0.96);
+  }
+  18% {
+    transform: translate(-50%, -50%) translate(0, 0) rotate(-4deg) scale(1.03);
+  }
+  64% {
+    transform: translate(-50%, -50%) translate(var(--demo-hand-dx, 0), var(--demo-hand-dy, 0)) rotate(-4deg)
+      scale(1.03);
+  }
+  82% {
+    transform: translate(-50%, -50%) translate(var(--demo-hand-dx, 0), var(--demo-hand-dy, 0)) rotate(-4deg)
+      scale(0.96);
   }
 }
 

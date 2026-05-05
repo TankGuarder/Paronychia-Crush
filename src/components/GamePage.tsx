@@ -18,6 +18,8 @@ import { Modal } from './Modal';
 import { TutorialDemoOverlay } from './TutorialDemoOverlay';
 
 const idleHintDelayMs = 5000;
+const removeAnimationMs = 240;
+const dropAnimationMs = 340;
 
 interface GamePageProps {
   level: LevelConfig;
@@ -158,7 +160,7 @@ export function GamePage({
         droppingKeys: [],
         newTileKeys: [],
       });
-      await wait(180);
+      await wait(removeAnimationMs);
 
       setBoard(step.board);
       setAnimation({
@@ -168,7 +170,7 @@ export function GamePage({
       });
       onScoreChange(step.removedTotal);
       currentBoard = step.board;
-      await wait(260);
+      await wait(dropAnimationMs);
     }
 
     const playableBoard = ensurePlayableBoard(currentBoard);

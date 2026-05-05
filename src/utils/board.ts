@@ -183,55 +183,32 @@ const collapseBoardWithAnimation = (board: BoardCell[][], removed: Set<string>) 
   const droppingKeys = new Set<string>();
   const newTileKeys = new Set<string>();
 
-  // 障礙被消除後會變成可補牌空格；未消除的障礙會固定在原位置。
   for (let col = 0; col < boardSize; col += 1) {
-    let row = boardSize - 1;
+    const survivors: Array<{ cell: BoardCell; fromRow: number }> = [];
 
-    while (row >= 0) {
+    // Obstacles are board contents, not fixed overlays. Any non-removed cell
+    // keeps its identity and falls under the same gravity pass as main tiles.
+    for (let row = boardSize - 1; row >= 0; row -= 1) {
       const key = `${row}-${col}`;
-      const cell = board[row][col];
+      if (!removed.has(key)) {
+        survivors.push({ cell: board[row][col], fromRow: row });
+      }
+    }
 
-      if (cell.kind === 'obstacle' && !removed.has(key)) {
-        next[row][col] = cell;
-        row -= 1;
+    for (let row = boardSize - 1; row >= 0; row -= 1) {
+      const survivor = survivors.shift();
+      const key = `${row}-${col}`;
+
+      if (survivor) {
+        next[row][col] = survivor.cell;
+        if (survivor.fromRow !== row) {
+          droppingKeys.add(key);
+        }
         continue;
       }
 
-      const segmentEnd = row;
-      while (row >= 0) {
-        const segmentKey = `${row}-${col}`;
-        const segmentCell = board[row][col];
-        if (segmentCell.kind === 'obstacle' && !removed.has(segmentKey)) {
-          break;
-        }
-        row -= 1;
-      }
-      const segmentStart = row + 1;
-      const survivors: Array<{ cell: BoardCell; fromRow: number }> = [];
-
-      for (let segmentRow = segmentEnd; segmentRow >= segmentStart; segmentRow -= 1) {
-        const segmentKey = `${segmentRow}-${col}`;
-        const segmentCell = board[segmentRow][col];
-        if (segmentCell.kind === 'tile' && !removed.has(segmentKey)) {
-          survivors.push({ cell: segmentCell, fromRow: segmentRow });
-        }
-      }
-
-      for (let segmentRow = segmentEnd; segmentRow >= segmentStart; segmentRow -= 1) {
-        const survivor = survivors.shift();
-        const key = `${segmentRow}-${col}`;
-
-        if (survivor) {
-          next[segmentRow][col] = survivor.cell;
-          if (survivor.fromRow !== segmentRow) {
-            droppingKeys.add(key);
-          }
-          continue;
-        }
-
-        next[segmentRow][col] = makeTileCell();
-        newTileKeys.add(key);
-      }
+      next[row][col] = makeTileCell();
+      newTileKeys.add(key);
     }
   }
 

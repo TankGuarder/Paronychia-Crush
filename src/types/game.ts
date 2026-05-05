@@ -83,6 +83,8 @@ export interface LevelDemoConfig {
   matchTileType: TileType;
   obstaclePosition: [number, number];
   matchPositions: Array<[number, number]>;
+  swipeFrom?: [number, number];
+  swipeTo?: [number, number];
 }
 
 export interface QuizQuestion {

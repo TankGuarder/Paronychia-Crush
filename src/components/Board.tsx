@@ -136,6 +136,7 @@ export function Board({ board, hintMove, animation, disabled, onInteractionStart
           const cellKey = `${rowIndex}-${colIndex}`;
           const animationClass = [
             removingKeys.has(cellKey) ? 'removing' : '',
+            cell.kind === 'tile' && removingKeys.has(cellKey) ? 'removing-main' : '',
             droppingKeys.has(cellKey) ? 'dropping' : '',
             newTileKeys.has(cellKey) ? 'new-tile' : '',
             isDragging ? 'dragging' : '',
