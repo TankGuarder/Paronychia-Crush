@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import clearSoundUrl from '../assets/audio/shoot1.mp3';
+import shuffleSoundUrl from '../assets/audio/warp1.mp3';
 import { obstacleDefinitions } from '../data/obstacles';
 import type { BoardAnimationState, BoardCell, BoardPosition, GameRules, LevelConfig, SuggestedMove } from '../types/game';
 import {
@@ -20,6 +22,8 @@ import { TutorialDemoOverlay } from './TutorialDemoOverlay';
 const idleHintDelayMs = 5000;
 const removeAnimationMs = 240;
 const dropAnimationMs = 340;
+const clearSoundVolume = 0.72;
+const shuffleSoundVolume = 0.68;
 
 interface GamePageProps {
   level: LevelConfig;
@@ -52,8 +56,26 @@ export function GamePage({
   const [interactionTick, setInteractionTick] = useState(0);
   const [animation, setAnimation] = useState<BoardAnimationState | null>(null);
   const [isResolving, setIsResolving] = useState(false);
+  const clearSoundRef = useRef<HTMLAudioElement | null>(null);
+  const shuffleSoundRef = useRef<HTMLAudioElement | null>(null);
 
   const wait = (durationMs: number) => new Promise((resolve) => window.setTimeout(resolve, durationMs));
+
+  const playClearSound = () => {
+    const audio = clearSoundRef.current ?? new Audio(clearSoundUrl);
+    clearSoundRef.current = audio;
+    audio.volume = clearSoundVolume;
+    audio.currentTime = 0;
+    void audio.play().catch(() => undefined);
+  };
+
+  const playShuffleSound = () => {
+    const audio = shuffleSoundRef.current ?? new Audio(shuffleSoundUrl);
+    shuffleSoundRef.current = audio;
+    audio.volume = shuffleSoundVolume;
+    audio.currentTime = 0;
+    void audio.play().catch(() => undefined);
+  };
 
   const obstacleHint = useMemo(
     () => obstacleDefinitions.map((obstacle) => `${obstacle.name}：${obstacle.hint}`).join(' '),
@@ -133,6 +155,7 @@ export function GamePage({
     if (!passed && remainingObstacleTotal === 0) {
       setPassed(true);
       setHintMove(null);
+      // Match clears already add their own score; this is only the fixed pass bonus.
       onScoreChange(rules.passBonusScore);
     }
   }, [onScoreChange, passed, remainingObstacleTotal, rules.passBonusScore]);
@@ -155,6 +178,10 @@ export function GamePage({
       removedTotal += step.removedTotal;
       clearedObstacles += step.clearedObstacles;
 
+      if (step.removedTotal > 0) {
+        playClearSound();
+      }
+
       setAnimation({
         removingKeys: step.animation.removingKeys,
         droppingKeys: [],
@@ -175,6 +202,7 @@ export function GamePage({
 
     const playableBoard = ensurePlayableBoard(currentBoard);
     if (playableBoard !== currentBoard) {
+      playShuffleSound();
       setBoard(playableBoard);
       setLastMessage('盤面已自動洗牌，保留目前障礙進度。');
       await wait(120);
