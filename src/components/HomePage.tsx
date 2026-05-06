@@ -9,14 +9,7 @@ interface HomePageProps {
   onStart: () => void;
 }
 
-export function HomePage({
-  nickname,
-  liffStatusText,
-  liffDisplayName,
-  lineUserId,
-  onNicknameChange,
-  onStart,
-}: HomePageProps) {
+export function HomePage({ nickname, onNicknameChange, onStart }: HomePageProps) {
   const canStart = nickname.trim().length > 0;
 
   return (
@@ -39,12 +32,6 @@ export function HomePage({
             <button className="cover-start-button" disabled={!canStart} onClick={onStart}>
               開始遊戲
             </button>
-          </div>
-
-          <div className="cover-liff-status" aria-live="polite">
-            <strong>{liffStatusText}</strong>
-            {liffDisplayName && <span>LINE 名稱：{liffDisplayName}</span>}
-            {lineUserId && <span>已保留 LINE 識別資訊</span>}
           </div>
         </div>
       </section>
