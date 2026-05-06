@@ -21,7 +21,7 @@ export function HomePage({
 
   return (
     <main className="page home-page">
-      <section className="cover-screen" aria-label="甲溝炎傳奇開始畫面">
+      <section className="cover-screen" aria-label="甲溝炎傳奇首頁">
         <img className="cover-art" src={homeCover} alt="" aria-hidden="true" />
 
         <div className="cover-start-panel">
@@ -31,7 +31,7 @@ export function HomePage({
               <input
                 value={nickname}
                 maxLength={12}
-                placeholder="輸入暱稱"
+                placeholder="請輸入暱稱"
                 onChange={(event) => onNicknameChange(event.target.value)}
               />
             </label>

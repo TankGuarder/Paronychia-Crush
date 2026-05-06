@@ -13,7 +13,8 @@ import type {
 
 const MAX_BOARD_SIZE = 15;
 const MIN_BOARD_SIZE = 3;
-const MAX_PLAYABLE_BOARD_ATTEMPTS = 500;
+const MAX_PLAYABLE_BOARD_ATTEMPTS = 80;
+const MAX_OBSTACLES_PER_BOARD = 15;
 
 export const maxBoardSize = MAX_BOARD_SIZE;
 
@@ -152,6 +153,16 @@ const getAdjacentKeys = (row: number, col: number, boardSize: number) =>
     .filter(([nextRow, nextCol]) => nextRow >= 0 && nextRow < boardSize && nextCol >= 0 && nextCol < boardSize)
     .map(([nextRow, nextCol]) => `${nextRow}-${nextCol}`);
 
+const getAdjacentPositions = (row: number, col: number, boardSize: number): Array<[number, number]> =>
+  [
+    [row - 1, col],
+    [row + 1, col],
+    [row, col - 1],
+    [row, col + 1],
+  ].filter(([nextRow, nextCol]) => nextRow >= 0 && nextRow < boardSize && nextCol >= 0 && nextCol < boardSize) as Array<
+    [number, number]
+  >;
+
 const findClearedObstacles = (board: BoardCell[][], matched: Set<string>) => {
   const boardSize = board.length;
   const cleared = new Set<string>();
@@ -175,6 +186,62 @@ const findClearedObstacles = (board: BoardCell[][], matched: Set<string>) => {
   });
 
   return cleared;
+};
+
+const hasObstacles = (board: BoardCell[][]) => board.some((row) => row.some((cell) => cell.kind === 'obstacle'));
+
+const hasAccessibleObstacles = (board: BoardCell[][]) => {
+  const boardSize = board.length;
+
+  return board.every((row, rowIndex) =>
+    row.every((cell, colIndex) => {
+      if (cell.kind !== 'obstacle') {
+        return true;
+      }
+
+      return getAdjacentPositions(rowIndex, colIndex, boardSize).some(
+        ([adjacentRow, adjacentCol]) => board[adjacentRow][adjacentCol].kind === 'tile',
+      );
+    }),
+  );
+};
+
+const getMatchesAfterSwap = (board: BoardCell[][], first: [number, number], second: [number, number]) => {
+  if (!canSwapCells(board, first, second)) {
+    return null;
+  }
+
+  const swapped = swapTiles(board, first, second);
+  const matched = findMatches(swapped);
+  return matched.size > 0 ? { swapped, matched } : null;
+};
+
+export const findObstacleClearingMove = (board: BoardCell[][]): SuggestedMove | null => {
+  const boardSize = board.length;
+
+  if (!hasObstacles(board)) {
+    return null;
+  }
+
+  for (let row = 0; row < boardSize; row += 1) {
+    for (let col = 0; col < boardSize; col += 1) {
+      const first: [number, number] = [row, col];
+      const candidates: Array<[number, number]> = [
+        [row, col + 1],
+        [row + 1, col],
+      ];
+
+      for (const second of candidates) {
+        const result = getMatchesAfterSwap(board, first, second);
+
+        if (result && findClearedObstacles(result.swapped, result.matched).size > 0) {
+          return [first, second];
+        }
+      }
+    }
+  }
+
+  return null;
 };
 
 const collapseBoardWithAnimation = (board: BoardCell[][], removed: Set<string>) => {
@@ -303,6 +370,11 @@ export const resolveBoard = (board: BoardCell[][]): MatchResult => {
 export const hasAnyMatch = (board: BoardCell[][]) => findMatches(board).size > 0;
 
 export const findSuggestedMove = (board: BoardCell[][]): SuggestedMove | null => {
+  const obstacleMove = findObstacleClearingMove(board);
+  if (obstacleMove) {
+    return obstacleMove;
+  }
+
   const boardSize = board.length;
 
   for (let row = 0; row < boardSize; row += 1) {
@@ -323,8 +395,7 @@ export const findSuggestedMove = (board: BoardCell[][]): SuggestedMove | null =>
           continue;
         }
 
-        const swapped = swapTiles(board, first, second);
-        if (findMatches(swapped).size > 0) {
+        if (getMatchesAfterSwap(board, first, second)) {
           return [first, second];
         }
       }
@@ -335,6 +406,9 @@ export const findSuggestedMove = (board: BoardCell[][]): SuggestedMove | null =>
 };
 
 export const hasLegalMove = (board: BoardCell[][]) => findSuggestedMove(board) !== null;
+
+const hasGoalRelevantMove = (board: BoardCell[][]) =>
+  !hasObstacles(board) || (hasAccessibleObstacles(board) && findObstacleClearingMove(board) !== null);
 
 const shuffleItems = <T,>(items: T[]) => {
   const next = [...items];
@@ -370,7 +444,8 @@ const rebuildBoardWithTiles = (board: BoardCell[][], tiles: BoardCell[]) => {
   );
 };
 
-const isStablePlayableBoard = (board: BoardCell[][]) => !hasAnyMatch(board) && hasLegalMove(board);
+const isStablePlayableBoard = (board: BoardCell[][]) =>
+  !hasAnyMatch(board) && hasLegalMove(board) && hasGoalRelevantMove(board);
 
 const canPlaceLegalMovePattern = (board: BoardCell[][], positions: Array<[number, number]>) =>
   positions.every(([row, col]) => board[row]?.[col]?.kind === 'tile');
@@ -391,12 +466,63 @@ const withForcedLegalMovePattern = (
   return next;
 };
 
+const createPatternedTileBoard = (board: BoardCell[][]) =>
+  board.map((row, rowIndex) =>
+    row.map((cell, colIndex) => {
+      if (cell.kind === 'obstacle') {
+        return cell;
+      }
+
+      return makeTileCell(playableTileTypes[(rowIndex * 2 + colIndex) % playableTileTypes.length]);
+    }),
+  );
+
 const createForcedPlayableBoard = (board: BoardCell[][]): BoardCell[][] | null => {
   const obstacles = getObstaclePlacementsFromBoard(board);
   const boardSize = board.length;
+  const obstacleAdjacentPatterns = getObstacleAdjacentForcedPatterns(board);
+
+  const tryForcePattern = (candidate: BoardCell[][], patterns: Array<Array<[number, number]>>) => {
+    for (const pattern of patterns) {
+      if (!canPlaceLegalMovePattern(candidate, pattern)) {
+        continue;
+      }
+
+      for (const primaryType of playableTileTypes) {
+        for (const blockerType of playableTileTypes) {
+          if (primaryType === blockerType) {
+            continue;
+          }
+
+          const forced = withForcedLegalMovePattern(candidate, pattern, primaryType, blockerType);
+
+          if (isStablePlayableBoard(forced)) {
+            return forced;
+          }
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const forcedCurrentBoard = tryForcePattern(board, obstacleAdjacentPatterns);
+  if (forcedCurrentBoard) {
+    return forcedCurrentBoard;
+  }
+
+  const forcedPatternedBoard = tryForcePattern(createPatternedTileBoard(board), obstacleAdjacentPatterns);
+  if (forcedPatternedBoard) {
+    return forcedPatternedBoard;
+  }
 
   for (let attempt = 0; attempt < MAX_PLAYABLE_BOARD_ATTEMPTS; attempt += 1) {
     const candidate = createBoardCandidate(boardSize, obstacles);
+    const forcedCandidate = tryForcePattern(candidate, obstacleAdjacentPatterns);
+
+    if (forcedCandidate) {
+      return forcedCandidate;
+    }
 
     for (let row = 0; row < boardSize; row += 1) {
       for (let col = 0; col < boardSize; col += 1) {
@@ -441,6 +567,155 @@ const createForcedPlayableBoard = (board: BoardCell[][]): BoardCell[][] | null =
   return null;
 };
 
+const getObstacleAdjacentForcedPatterns = (board: BoardCell[][]) => {
+  const boardSize = board.length;
+  const patterns: Array<Array<[number, number]>> = [];
+  const seen = new Set<string>();
+
+  const addPattern = (pattern: Array<[number, number]>) => {
+    const key = pattern.map(([row, col]) => `${row}-${col}`).join('|');
+    if (!seen.has(key)) {
+      seen.add(key);
+      patterns.push(pattern);
+    }
+  };
+
+  const isAdjacentToObstacle = (positions: Array<[number, number]>) =>
+    positions.some(([row, col]) =>
+      getAdjacentPositions(row, col, boardSize).some(
+        ([adjacentRow, adjacentCol]) => board[adjacentRow][adjacentCol].kind === 'obstacle',
+      ),
+    );
+
+  for (let row = 0; row < boardSize; row += 1) {
+    for (let col = 0; col < boardSize - 2; col += 1) {
+      const matchLine: Array<[number, number]> = [
+        [row, col],
+        [row, col + 1],
+        [row, col + 2],
+      ];
+
+      if (!isAdjacentToObstacle(matchLine)) {
+        continue;
+      }
+
+      [
+        [row - 1, col + 1],
+        [row + 1, col + 1],
+      ].forEach(([supportRow, supportCol]) => {
+        addPattern([...matchLine, [supportRow, supportCol]]);
+      });
+    }
+  }
+
+  for (let row = 0; row < boardSize - 2; row += 1) {
+    for (let col = 0; col < boardSize; col += 1) {
+      const matchLine: Array<[number, number]> = [
+        [row, col],
+        [row + 1, col],
+        [row + 2, col],
+      ];
+
+      if (!isAdjacentToObstacle(matchLine)) {
+        continue;
+      }
+
+      [
+        [row + 1, col - 1],
+        [row + 1, col + 1],
+      ].forEach(([supportRow, supportCol]) => {
+        addPattern([...matchLine, [supportRow, supportCol]]);
+      });
+    }
+  }
+
+  return patterns;
+};
+
+const hasAccessiblePlacements = (boardSize: number, obstacles: ObstaclePlacement[]) => {
+  const occupied = new Set(obstacles.map((obstacle) => `${obstacle.row}-${obstacle.col}`));
+
+  return obstacles.every((obstacle) =>
+    getAdjacentPositions(obstacle.row, obstacle.col, boardSize).some(
+      ([row, col]) => !occupied.has(`${row}-${col}`),
+    ),
+  );
+};
+
+const createAccessibleObstaclePlacements = (boardSize: number, obstacles: ObstaclePlacement[]) => {
+  const safePlacementPatterns: Record<number, Array<[number, number]>> = {
+    5: [
+      [0, 4],
+      [1, 0],
+      [1, 4],
+      [2, 0],
+      [2, 4],
+      [3, 0],
+      [3, 4],
+      [4, 0],
+      [4, 2],
+      [4, 4],
+      [0, 0],
+      [0, 2],
+    ],
+    6: [
+      [0, 5],
+      [1, 0],
+      [1, 5],
+      [2, 0],
+      [2, 5],
+      [3, 0],
+      [3, 5],
+      [4, 0],
+      [4, 5],
+      [5, 0],
+      [5, 2],
+      [5, 5],
+      [0, 0],
+      [0, 2],
+      [2, 2],
+      [3, 3],
+    ],
+  };
+  const count = Math.min(obstacles.length, MAX_OBSTACLES_PER_BOARD, Math.max(0, boardSize * boardSize - 4));
+  const safePattern = safePlacementPatterns[boardSize];
+
+  if (safePattern && count <= safePattern.length) {
+    return safePattern.slice(0, count).map(([row, col], index) => ({
+      type: obstacles[index % obstacles.length]?.type ?? 'redParonychia',
+      row,
+      col,
+    }));
+  }
+
+  const allPositions: Array<[number, number]> = [];
+  for (let row = 0; row < boardSize; row += 1) {
+    for (let col = 0; col < boardSize; col += 1) {
+      allPositions.push([row, col]);
+    }
+  }
+
+  const preferredPositions = [
+    ...allPositions.filter(([row, col]) => (row + col) % 2 === 0),
+    ...allPositions.filter(([row, col]) => (row + col) % 2 !== 0),
+  ];
+
+  for (let attempt = 0; attempt < MAX_PLAYABLE_BOARD_ATTEMPTS; attempt += 1) {
+    const pool = attempt === 0 ? preferredPositions : shuffleItems(preferredPositions);
+    const placements = pool.slice(0, count).map(([row, col], index) => ({
+      type: obstacles[index % obstacles.length]?.type ?? 'redParonychia',
+      row,
+      col,
+    }));
+
+    if (hasAccessiblePlacements(boardSize, placements)) {
+      return placements;
+    }
+  }
+
+  return obstacles.slice(0, count);
+};
+
 export const shuffleBoardPreservingObstacles = (board: BoardCell[][]): BoardCell[][] => {
   const tiles = board.flat().filter((cell) => cell.kind === 'tile');
 
@@ -464,7 +739,16 @@ export const shuffleBoardPreservingObstacles = (board: BoardCell[][]): BoardCell
     }
   }
 
-  return createForcedPlayableBoard(board) ?? board;
+  const accessibleObstacles = createAccessibleObstaclePlacements(board.length, obstacles);
+  for (let attempt = 0; attempt < MAX_PLAYABLE_BOARD_ATTEMPTS; attempt += 1) {
+    const candidate = createBoardCandidate(board.length, accessibleObstacles);
+
+    if (isStablePlayableBoard(candidate)) {
+      return candidate;
+    }
+  }
+
+  return createForcedPlayableBoard(createBoardCandidate(board.length, accessibleObstacles)) ?? createForcedPlayableBoard(board) ?? board;
 };
 
 export const ensurePlayableBoard = (board: BoardCell[][]) =>
