@@ -697,85 +697,39 @@ h2 {
 
 .idle-hand {
   position: absolute;
-  right: -16px;
-  bottom: -18px;
+  left: 50%;
+  top: 50%;
+  z-index: 4;
   display: grid;
-  width: 54px;
-  height: 62px;
+  width: clamp(42px, 12vw, 58px);
+  height: clamp(42px, 12vw, 58px);
   place-items: center;
   pointer-events: none;
-  animation: idleHandNudge 1.55s ease-in-out infinite;
+  animation: idleHandSwipe 1.55s ease-in-out infinite;
 }
 
-.gesture-hand {
-  position: absolute;
-  isolation: isolate;
+.idle-hand img,
+.demo-hand img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 4px rgba(57, 34, 76, 0.28));
 }
 
-.gesture-trail {
+.idle-swipe-track {
   position: absolute;
-  left: 15px;
-  top: 2px;
-  width: 24px;
-  height: 16px;
-  border-top: 5px solid #111111;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: clamp(32px, 11vw, 48px);
+  height: 8px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.88), rgba(255, 244, 93, 0.72));
   border-radius: 999px;
-  filter: drop-shadow(0 3px 2px rgba(81, 45, 100, 0.18));
-}
-
-.gesture-trail::after {
-  position: absolute;
-  left: 9px;
-  top: -16px;
-  width: 0;
-  height: 13px;
-  border-left: 5px solid #111111;
-  box-shadow:
-    -18px 10px 0 #111111,
-    18px 10px 0 #111111;
-  transform: none;
-  content: "";
-}
-
-.gesture-finger {
-  position: absolute;
-  left: 14px;
-  top: 16px;
-  width: 18px;
-  height: 34px;
-  border: 5px solid #111111;
-  border-bottom: 0;
-  border-radius: 999px 999px 0 0;
-  background: #ffffff;
-  box-shadow:
-    inset 0 3px 0 rgba(255, 255, 255, 0.85),
-    0 6px 10px rgba(73, 43, 100, 0.22);
-  transform: none;
-}
-
-.gesture-finger::after {
-  position: absolute;
-  left: -18px;
-  bottom: -25px;
-  width: 46px;
-  height: 32px;
-  border: 5px solid #111111;
-  border-top: 0;
-  border-radius: 0 0 16px 16px;
-  background: #ffffff;
-  content: "";
-}
-
-.gesture-finger::before {
-  position: absolute;
-  left: -16px;
-  bottom: -42px;
-  width: 42px;
-  height: 15px;
-  border: 5px solid #111111;
-  border-radius: 9px;
-  background: #ffffff;
-  content: "";
+  opacity: 0.8;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(var(--hint-angle, 0deg));
+  animation: idleTrackPulse 1.55s ease-in-out infinite;
 }
 
 .tile-ointment {
@@ -822,9 +776,22 @@ h2 {
   }
 }
 
-@keyframes idleHandNudge {
+@keyframes idleHandSwipe {
+  0%,
+  100% {
+    opacity: 0.86;
+    transform: translate(-50%, -50%) translate(0, 0) rotate(-12deg) scale(0.92);
+  }
+  62% {
+    opacity: 1;
+    transform: translate(-50%, -50%) translate(var(--hint-dx, 0), var(--hint-dy, 0)) rotate(-12deg) scale(1);
+  }
+}
+
+@keyframes idleTrackPulse {
   50% {
-    transform: translate(-6px, -6px) rotate(-4deg);
+    opacity: 0.48;
+    transform: translate(-50%, -50%) scaleX(1.22);
   }
 }
 
@@ -1016,8 +983,8 @@ h2 {
   z-index: 7;
   display: grid;
   place-items: center;
-  width: 62px;
-  height: 70px;
+  width: clamp(54px, 14vw, 70px);
+  height: clamp(54px, 14vw, 70px);
   animation: demoHandSwipe 1.45s ease-in-out infinite;
 }
 

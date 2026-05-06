@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { obstacleDefinitions } from '../data/obstacles';
 import { tileDefinitions } from '../data/tiles';
+import hintHandIcon from '../assets/icons/hint-hand.svg';
 import type { LevelDemoConfig } from '../types/game';
 
 const tileMap = new Map(tileDefinitions.map((tile) => [tile.id, tile]));
@@ -70,9 +71,8 @@ export function TutorialDemoOverlay({ boardSize, demo }: TutorialDemoOverlayProp
             <circle cx={startPoint.x} cy={startPoint.y} r="2.8" />
             <circle cx={endPoint.x} cy={endPoint.y} r="3.6" />
           </svg>
-          <span className="demo-hand gesture-hand" style={handStyle}>
-            <span className="gesture-trail" />
-            <span className="gesture-finger" />
+          <span className="demo-hand" style={handStyle}>
+            <img src={hintHandIcon} alt="" />
           </span>
         </div>
         <div className="demo-progress" style={progressStyle} />

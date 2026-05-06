@@ -1,6 +1,7 @@
 import { useState, type CSSProperties, type PointerEvent } from 'react';
 import { tileDefinitions } from '../data/tiles';
 import { obstacleDefinitions } from '../data/obstacles';
+import hintHandIcon from '../assets/icons/hint-hand.svg';
 import type { BoardAnimationState, BoardCell, BoardPosition, SuggestedMove } from '../types/game';
 
 const tileMap = new Map(tileDefinitions.map((tile) => [tile.id, tile]));
@@ -60,6 +61,23 @@ const getDragStyle = (drag: DragState | null, row: number, col: number): CSSProp
   return {
     '--drag-x': `${dragX}px`,
     '--drag-y': `${dragY}px`,
+  } as CSSProperties;
+};
+
+const getHintStyle = (hintMove: SuggestedMove | null): CSSProperties | undefined => {
+  if (!hintMove) {
+    return undefined;
+  }
+
+  const [[fromRow, fromCol], [toRow, toCol]] = hintMove;
+  const rowDelta = toRow - fromRow;
+  const colDelta = toCol - fromCol;
+  const angle = rowDelta !== 0 ? 90 : 0;
+
+  return {
+    '--hint-dx': `${colDelta * 100}%`,
+    '--hint-dy': `${rowDelta * 100}%`,
+    '--hint-angle': `${angle}deg`,
   } as CSSProperties;
 };
 
@@ -161,10 +179,10 @@ export function Board({ board, hintMove, animation, disabled, onInteractionStart
               aria-label={`${definition?.name ?? '方塊'}，第 ${rowIndex + 1} 列第 ${colIndex + 1} 欄`}
             >
               {definition?.icon && <img className="tile-icon" src={definition.icon} alt="" aria-hidden="true" />}
-              {hintIndex === 1 && (
-                <span className="idle-hand gesture-hand" aria-hidden="true">
-                  <span className="gesture-trail" />
-                  <span className="gesture-finger" />
+              {hintIndex === 0 && <span className="idle-swipe-track" aria-hidden="true" />}
+              {hintIndex === 0 && (
+                <span className="idle-hand" style={getHintStyle(hintMove)} aria-hidden="true">
+                  <img src={hintHandIcon} alt="" />
                 </span>
               )}
             </button>
