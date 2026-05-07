@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import gameBgmUrl from '../assets/audio/game-bgm.mp3';
 import clearSoundUrl from '../assets/audio/shoot1.mp3';
 import shuffleSoundUrl from '../assets/audio/warp1.mp3';
 import { obstacleDefinitions } from '../data/obstacles';
@@ -22,6 +23,7 @@ import { TutorialDemoOverlay } from './TutorialDemoOverlay';
 const idleHintDelayMs = 5000;
 const removeAnimationMs = 240;
 const dropAnimationMs = 340;
+const gameBgmVolume = 0.3;
 const clearSoundVolume = 0.72;
 const shuffleSoundVolume = 0.68;
 
@@ -56,10 +58,20 @@ export function GamePage({
   const [interactionTick, setInteractionTick] = useState(0);
   const [animation, setAnimation] = useState<BoardAnimationState | null>(null);
   const [isResolving, setIsResolving] = useState(false);
+  const gameBgmRef = useRef<HTMLAudioElement | null>(null);
   const clearSoundRef = useRef<HTMLAudioElement | null>(null);
   const shuffleSoundRef = useRef<HTMLAudioElement | null>(null);
 
   const wait = (durationMs: number) => new Promise((resolve) => window.setTimeout(resolve, durationMs));
+
+  const playGameBgm = () => {
+    const audio = gameBgmRef.current;
+    if (!audio) {
+      return;
+    }
+
+    void audio.play().catch(() => undefined);
+  };
 
   const playClearSound = () => {
     const audio = clearSoundRef.current ?? new Audio(clearSoundUrl);
@@ -76,6 +88,20 @@ export function GamePage({
     audio.currentTime = 0;
     void audio.play().catch(() => undefined);
   };
+
+  useEffect(() => {
+    const audio = new Audio(gameBgmUrl);
+    audio.loop = true;
+    audio.volume = gameBgmVolume;
+    gameBgmRef.current = audio;
+    playGameBgm();
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+      gameBgmRef.current = null;
+    };
+  }, []);
 
   const obstacleHint = useMemo(
     () => obstacleDefinitions.map((obstacle) => `${obstacle.name}：${obstacle.hint}`).join(' '),
@@ -255,7 +281,7 @@ export function GamePage({
   };
 
   return (
-    <main className="page game-page">
+    <main className="page game-page" onPointerDown={playGameBgm}>
       <GameHeader
         level={level.order}
         totalLevels={rules.totalLevels}
