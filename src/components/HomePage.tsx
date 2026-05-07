@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import homeBgmUrl from '../assets/audio/home-bgm.mp3';
 import homeCover from '../assets/home-cover.png';
+import homeCoverMobile from '../assets/home-cover-mobile.png';
 
 interface HomePageProps {
   nickname: string;
@@ -41,7 +42,10 @@ export function HomePage({ nickname, onNicknameChange, onStart }: HomePageProps)
   return (
     <main className="page home-page">
       <section className="cover-screen" aria-label="甲溝炎傳奇首頁" onPointerDown={playHomeBgm}>
-        <img className="cover-art" src={homeCover} alt="" aria-hidden="true" />
+        <picture>
+          <source srcSet={homeCoverMobile} media="(max-width: 540px)" />
+          <img className="cover-art" src={homeCover} alt="" aria-hidden="true" />
+        </picture>
 
         <div className="cover-start-panel">
           <div className="cover-player-card">

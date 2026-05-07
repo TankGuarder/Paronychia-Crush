@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AdminLeaderboardPage } from './components/AdminLeaderboardPage';
 import { GamePage } from './components/GamePage';
 import { HomePage } from './components/HomePage';
 import { QuizPage } from './components/QuizPage';
@@ -28,6 +29,7 @@ export default function App() {
   const { screen, nickname, lineUserId, currentLevelIndex, completedLevel, score, timeBonus } = runState;
   const currentLevel = levels[currentLevelIndex];
   const isFinalLevel = currentLevelIndex === levels.length - 1;
+  const isAdminRoute = window.location.pathname.endsWith('/admin/leaderboard') || window.location.hash === '#/admin/leaderboard';
 
   const liffStatusText = (() => {
     if (liffState.isLoading) {
@@ -76,7 +78,7 @@ export default function App() {
     }));
   };
 
-  const finishRun = useCallback(() => {
+  const finishRun = useCallback(async () => {
     const entry: LeaderboardEntry = {
       nickname: nickname.trim(),
       lineUserId,
@@ -84,7 +86,7 @@ export default function App() {
       completedLevel,
       createdAt: new Date().toISOString(),
     };
-    const result = saveScore(entry);
+    const result = await saveScore(entry);
     setLeaderboard(result.entries);
     setRank(result.rank);
     setRunState((current) => ({ ...current, screen: 'summary' }));
@@ -100,7 +102,7 @@ export default function App() {
 
   const handleVideoDone = () => {
     if (isFinalLevel) {
-      finishRun();
+      void finishRun();
       return;
     }
 
@@ -134,6 +136,10 @@ export default function App() {
   };
 
   if (screen === 'home') {
+    if (isAdminRoute) {
+      return <AdminLeaderboardPage />;
+    }
+
     return (
       <HomePage
         nickname={nickname}
@@ -151,7 +157,7 @@ export default function App() {
   }
 
   if (screen === 'quiz') {
-    return <QuizPage level={currentLevel} rules={gameRules} onCorrect={handleQuizCorrect} onWrong={finishRun} />;
+    return <QuizPage level={currentLevel} rules={gameRules} onCorrect={handleQuizCorrect} onWrong={() => void finishRun()} />;
   }
 
   if (screen === 'summary') {
@@ -176,7 +182,7 @@ export default function App() {
       rules={gameRules}
       onScoreChange={changeScore}
       onLevelPassed={handleLevelPassed}
-      onTimeUpSettle={finishRun}
+      onTimeUpSettle={() => void finishRun()}
       onTimeUpQuiz={handleQuizStart}
     />
   );

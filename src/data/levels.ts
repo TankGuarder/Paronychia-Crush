@@ -83,22 +83,6 @@ export const levels: LevelConfig[] = [
     passHint: '清潔或碰水時戴手套，可保護甲溝皮膚。',
     videoTitle: '手套保護',
     videoMessage: '做清潔、洗碗或接觸刺激性清潔劑時，戴手套能降低發炎機會。',
-
-    demo: {
-      title: '滑動清除示範',
-      message: '用手套手指滑過方塊，完成交換後清除相鄰障礙。',
-      durationMs: 4200,
-      obstacleType: 'redParonychia',
-      matchTileType: 'gloves',
-      obstaclePosition: [2, 3],
-      matchPositions: [
-        [2, 0],
-        [2, 1],
-        [2, 2],
-      ],
-      swipeFrom: [2, 0],
-      swipeTo: [2, 1],
-    },
   },
   {
     levelId: 'L04',
