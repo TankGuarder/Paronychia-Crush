@@ -2,6 +2,9 @@ import type { LeaderboardEntry } from '../types/game';
 
 const STORAGE_KEY = 'paronychia-match-leaderboard';
 const apiBaseUrl = (import.meta.env.VITE_LEADERBOARD_API_BASE_URL || '').replace(/\/$/, '');
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').replace(/\/$/, '');
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabaseTableName = 'leaderboard_entries';
 const invalidNicknamePattern = /^(unknown|undefined|null|test|player|local player|mock player|不明玩家)$/i;
 
 const sortEntries = (entries: LeaderboardEntry[]) =>
@@ -53,6 +56,77 @@ const writeLeaderboard = (entries: LeaderboardEntry[]) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
 };
 
+const isSupabaseConfigured = () => Boolean(supabaseUrl && supabaseAnonKey);
+
+const toSupabaseRow = (entry: LeaderboardEntry) => ({
+  nickname: entry.nickname,
+  score: entry.score,
+  completed_level: entry.completedLevel,
+  line_user_id: entry.lineUserId ?? null,
+  created_at: entry.createdAt,
+});
+
+const fromSupabaseRow = (row: Record<string, unknown>): Partial<LeaderboardEntry> => ({
+  nickname: typeof row.nickname === 'string' ? row.nickname : undefined,
+  score: Number(row.score),
+  completedLevel: Number(row.completed_level),
+  lineUserId: typeof row.line_user_id === 'string' ? row.line_user_id : undefined,
+  createdAt: typeof row.created_at === 'string' ? row.created_at : undefined,
+});
+
+const supabaseHeaders = () => ({
+  apikey: supabaseAnonKey,
+  Authorization: `Bearer ${supabaseAnonKey}`,
+  Accept: 'application/json',
+});
+
+const readSupabaseLeaderboard = async (): Promise<LeaderboardEntry[] | null> => {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const query = new URLSearchParams({
+    select: 'nickname,score,completed_level,line_user_id,created_at',
+    order: 'score.desc,completed_level.desc,created_at.asc',
+  });
+  const response = await fetch(`${supabaseUrl}/rest/v1/${supabaseTableName}?${query}`, {
+    headers: supabaseHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase leaderboard failed: ${response.status}`);
+  }
+
+  const rows = (await response.json()) as Array<Record<string, unknown>>;
+  return cleanEntries(rows.map(fromSupabaseRow));
+};
+
+const writeSupabaseScore = async (entry: LeaderboardEntry) => {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const response = await fetch(`${supabaseUrl}/rest/v1/${supabaseTableName}`, {
+    method: 'POST',
+    headers: {
+      ...supabaseHeaders(),
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(toSupabaseRow(entry)),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase leaderboard failed: ${response.status}`);
+  }
+
+  const entries = (await readSupabaseLeaderboard()) ?? [];
+  return {
+    entries,
+    rank: entries.findIndex((item) => item.createdAt === entry.createdAt && item.nickname === entry.nickname) + 1,
+  };
+};
+
 const readRemoteLeaderboard = async (): Promise<LeaderboardEntry[] | null> => {
   if (!apiBaseUrl) {
     return null;
@@ -91,6 +165,16 @@ const writeRemoteScore = async (entry: LeaderboardEntry) => {
   return (await response.json()) as { entries?: unknown; rank?: number };
 };
 
+export const getLeaderboardSourceLabel = () => {
+  if (isSupabaseConfigured()) {
+    return 'Supabase';
+  }
+  if (apiBaseUrl) {
+    return apiBaseUrl;
+  }
+  return '本機 localStorage 模式';
+};
+
 export const loadLeaderboard = (): LeaderboardEntry[] => {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
@@ -109,7 +193,7 @@ export const loadLeaderboard = (): LeaderboardEntry[] => {
 
 export const loadSharedLeaderboard = async (): Promise<LeaderboardEntry[]> => {
   try {
-    return (await readRemoteLeaderboard()) ?? loadLeaderboard();
+    return (await readSupabaseLeaderboard()) ?? (await readRemoteLeaderboard()) ?? loadLeaderboard();
   } catch {
     return loadLeaderboard();
   }
@@ -119,6 +203,15 @@ export const saveScore = async (entry: LeaderboardEntry) => {
   const validEntry = normalizeEntry(entry);
 
   if (validEntry) {
+    try {
+      const supabaseResult = await writeSupabaseScore(validEntry);
+      if (supabaseResult) {
+        return supabaseResult;
+      }
+    } catch {
+      // Keep the MVP playable if Supabase is not configured correctly yet.
+    }
+
     try {
       const remoteResult = await writeRemoteScore(validEntry);
       if (remoteResult) {

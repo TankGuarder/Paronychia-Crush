@@ -181,7 +181,7 @@ export function GamePage({
     if (!passed && remainingObstacleTotal === 0) {
       setPassed(true);
       setHintMove(null);
-      // Match clears already add their own score; this is only the fixed pass bonus.
+      // Clearing main tiles does not add score; completing all obstacles grants the fixed pass bonus.
       onScoreChange(rules.passBonusScore);
     }
   }, [onScoreChange, passed, remainingObstacleTotal, rules.passBonusScore]);
@@ -221,7 +221,6 @@ export function GamePage({
         droppingKeys: step.animation.droppingKeys,
         newTileKeys: step.animation.newTileKeys,
       });
-      onScoreChange(step.removedTotal);
       currentBoard = step.board;
       await wait(dropAnimationMs);
     }

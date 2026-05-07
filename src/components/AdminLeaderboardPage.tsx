@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { LeaderboardEntry } from '../types/game';
-import { loadSharedLeaderboard } from '../utils/leaderboard';
+import { getLeaderboardSourceLabel, loadSharedLeaderboard } from '../utils/leaderboard';
 
 const formatDateTime = (value: string) =>
   new Intl.DateTimeFormat('zh-TW', {
@@ -13,7 +13,7 @@ export function AdminLeaderboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const apiBaseUrl = useMemo(() => import.meta.env.VITE_LEADERBOARD_API_BASE_URL || '本機 localStorage 模式', []);
+  const sourceLabel = useMemo(() => getLeaderboardSourceLabel(), []);
 
   const refresh = async () => {
     setIsLoading(true);
@@ -38,7 +38,7 @@ export function AdminLeaderboardPage() {
           <div>
             <p className="eyebrow">後台排行榜</p>
             <h1>所有玩家名次</h1>
-            <p className="admin-meta">資料來源：{apiBaseUrl}</p>
+            <p className="admin-meta">資料來源：{sourceLabel}</p>
           </div>
           <button className="secondary-button admin-refresh" onClick={() => void refresh()}>
             重新整理
