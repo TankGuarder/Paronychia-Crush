@@ -49,7 +49,7 @@ export function GamePage({
   onTimeUpQuiz,
 }: GamePageProps) {
   const [board, setBoard] = useState<BoardCell[][]>(() => createBoard(level.boardSize, level.obstacles));
-  const [secondsLeft, setSecondsLeft] = useState(rules.secondsPerLevel + timeBonus);
+  const [secondsLeft, setSecondsLeft] = useState(level.secondsPerLevel + timeBonus);
   const [passed, setPassed] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [lastMessage, setLastMessage] = useState('請滑動主方塊，朝相鄰方塊交換並形成三消。');
@@ -123,7 +123,7 @@ export function GamePage({
 
   useEffect(() => {
     setBoard(createBoard(level.boardSize, level.obstacles));
-    setSecondsLeft(rules.secondsPerLevel + timeBonus);
+    setSecondsLeft(level.secondsPerLevel + timeBonus);
     setPassed(false);
     setTimedOut(false);
     setIsDemoActive(Boolean(level.demo));
@@ -136,7 +136,7 @@ export function GamePage({
         ? `互動題答對，增加 ${timeBonus} 秒，繼續挑戰。`
         : '請滑動主方塊，朝相鄰方塊交換並形成三消。',
     );
-  }, [level.boardSize, level.demo, level.levelId, level.obstacles, rules.secondsPerLevel, timeBonus]);
+  }, [level.boardSize, level.demo, level.levelId, level.obstacles, level.secondsPerLevel, timeBonus]);
 
   useEffect(() => {
     if (!level.demo || !isDemoActive) {

@@ -8,6 +8,7 @@ export const levels: LevelConfig[] = [
     order: 1,
     version: fixedVersion,
     boardSize: 4,
+    secondsPerLevel: 30,
     title: '第 1 關：正確用藥',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -43,6 +44,7 @@ export const levels: LevelConfig[] = [
     order: 2,
     version: fixedVersion,
     boardSize: 4,
+    secondsPerLevel: 30,
     title: '第 2 關：鞋襪減壓',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -64,6 +66,7 @@ export const levels: LevelConfig[] = [
     order: 3,
     version: fixedVersion,
     boardSize: 5,
+    secondsPerLevel: 30,
     title: '第 3 關：手部保護',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -89,6 +92,7 @@ export const levels: LevelConfig[] = [
     order: 4,
     version: fixedVersion,
     boardSize: 5,
+    secondsPerLevel: 30,
     title: '第 4 關：規律保濕',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -116,6 +120,7 @@ export const levels: LevelConfig[] = [
     order: 5,
     version: fixedVersion,
     boardSize: 6,
+    secondsPerLevel: 30,
     title: '第 5 關：溫和清潔',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -145,6 +150,7 @@ export const levels: LevelConfig[] = [
     order: 6,
     version: fixedVersion,
     boardSize: 6,
+    secondsPerLevel: 40,
     title: '第 6 關：觀察紅腫',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -175,6 +181,7 @@ export const levels: LevelConfig[] = [
     order: 7,
     version: fixedVersion,
     boardSize: 6,
+    secondsPerLevel: 40,
     title: '第 7 關：指甲平剪',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -205,6 +212,7 @@ export const levels: LevelConfig[] = [
     order: 8,
     version: fixedVersion,
     boardSize: 6,
+    secondsPerLevel: 40,
     title: '第 8 關：保持乾爽',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -235,6 +243,7 @@ export const levels: LevelConfig[] = [
     order: 9,
     version: fixedVersion,
     boardSize: 6,
+    secondsPerLevel: 40,
     title: '第 9 關：不要自行處理膿液',
     goal: { label: '清除所有障礙' },
     obstacles: [
@@ -265,6 +274,7 @@ export const levels: LevelConfig[] = [
     order: 10,
     version: fixedVersion,
     boardSize: 6,
+    secondsPerLevel: 40,
     title: '第 10 關：按時回診',
     goal: { label: '清除所有障礙' },
     obstacles: [

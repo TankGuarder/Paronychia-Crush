@@ -64,6 +64,7 @@ export interface LevelConfig {
   order: number;
   version: string;
   boardSize: number;
+  secondsPerLevel: number;
   title: string;
   goal: LevelGoal;
   obstacles: ObstaclePlacement[];
