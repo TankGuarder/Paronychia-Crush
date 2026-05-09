@@ -1,9 +1,9 @@
 import type { TileDefinition } from '../types/game';
-import cottonSwabIcon from '../assets/icons/cotton-swab.png';
-import glovesIcon from '../assets/icons/gloves.png';
-import socksIcon from '../assets/icons/socks.png';
-import lotionIcon from '../assets/icons/lotion.png';
-import ointmentIcon from '../assets/icons/ointment.png';
+import cottonSwabIcon from '../assets/icons/optimized/cotton-swab.png';
+import glovesIcon from '../assets/icons/optimized/gloves.png';
+import socksIcon from '../assets/icons/optimized/socks.png';
+import lotionIcon from '../assets/icons/optimized/lotion.png';
+import ointmentIcon from '../assets/icons/optimized/ointment.png';
 
 export const tileDefinitions: TileDefinition[] = [
   {

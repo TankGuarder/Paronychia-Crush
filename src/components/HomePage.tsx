@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import homeBgmUrl from '../assets/audio/home-bgm.mp3';
 import homeCover from '../assets/home-cover.png';
 import homeCoverMobile from '../assets/home-cover-mobile.png';
+import { preloadGameAssets } from '../utils/preloadAssets';
 
 interface HomePageProps {
   nickname: string;
@@ -28,8 +29,10 @@ export function HomePage({ nickname, onNicknameChange, onStart }: HomePageProps)
   useEffect(() => {
     const audio = new Audio(homeBgmUrl);
     audio.loop = true;
+    audio.preload = 'auto';
     audio.volume = 0.36;
     bgmRef.current = audio;
+    preloadGameAssets();
     playHomeBgm();
 
     return () => {

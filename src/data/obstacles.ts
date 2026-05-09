@@ -1,5 +1,5 @@
 import type { ObstacleDefinition } from '../types/game';
-import paronychiaFingerIcon from '../assets/icons/paronychia-finger.png';
+import paronychiaFingerIcon from '../assets/icons/optimized/paronychia-finger.png';
 
 export const obstacleDefinitions: ObstacleDefinition[] = [
   {

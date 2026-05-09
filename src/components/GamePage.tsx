@@ -4,6 +4,7 @@ import clearSoundUrl from '../assets/audio/shoot1.mp3';
 import shuffleSoundUrl from '../assets/audio/warp1.mp3';
 import { obstacleDefinitions } from '../data/obstacles';
 import type { BoardAnimationState, BoardCell, BoardPosition, GameRules, LevelConfig, SuggestedMove } from '../types/game';
+import { preloadGameAssets } from '../utils/preloadAssets';
 import {
   areAdjacent,
   canSwapCells,
@@ -70,6 +71,7 @@ export function GamePage({
       return;
     }
 
+    audio.volume = gameBgmVolume;
     void audio.play().catch(() => undefined);
   };
 
@@ -90,18 +92,56 @@ export function GamePage({
   };
 
   useEffect(() => {
+    preloadGameAssets();
     const audio = new Audio(gameBgmUrl);
+    const clearAudio = new Audio(clearSoundUrl);
+    const shuffleAudio = new Audio(shuffleSoundUrl);
     audio.loop = true;
+    audio.preload = 'auto';
     audio.volume = gameBgmVolume;
+    clearAudio.preload = 'auto';
+    clearAudio.volume = clearSoundVolume;
+    shuffleAudio.preload = 'auto';
+    shuffleAudio.volume = shuffleSoundVolume;
+    audio.load();
+    clearAudio.load();
+    shuffleAudio.load();
     gameBgmRef.current = audio;
+    clearSoundRef.current = clearAudio;
+    shuffleSoundRef.current = shuffleAudio;
     playGameBgm();
 
+    const unlockAudio = () => {
+      clearSoundRef.current?.load();
+      shuffleSoundRef.current?.load();
+      playGameBgm();
+    };
+
+    const resumeOnVisible = () => {
+      if (document.visibilityState === 'visible') {
+        playGameBgm();
+      }
+    };
+
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio);
+    document.addEventListener('visibilitychange', resumeOnVisible);
+
     return () => {
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      document.removeEventListener('visibilitychange', resumeOnVisible);
       audio.pause();
       audio.currentTime = 0;
       gameBgmRef.current = null;
+      clearSoundRef.current = null;
+      shuffleSoundRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    playGameBgm();
+  }, [level.levelId]);
 
   const obstacleHint = useMemo(
     () => obstacleDefinitions.map((obstacle) => `${obstacle.name}：${obstacle.hint}`).join(' '),
