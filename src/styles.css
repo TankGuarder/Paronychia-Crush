@@ -1182,6 +1182,15 @@ h2 {
   filter: drop-shadow(0 4px 3px rgba(48, 25, 88, 0.22));
 }
 
+.tutorial-clear-preview {
+  position: absolute;
+  inset: 6%;
+  z-index: 6;
+  opacity: 0;
+  pointer-events: none;
+  animation: tutorialClearPreview 3.2s ease-in-out infinite;
+}
+
 .tutorial-obstacle {
   background: linear-gradient(180deg, #ffd8ca, #ff8f91);
 }
@@ -1253,7 +1262,7 @@ h2 {
   height: clamp(50px, 14vw, 68px);
   place-items: center;
   pointer-events: none;
-  animation: tutorialHandSwipe 2.35s ease-in-out infinite;
+  animation: tutorialHandSwipe 3.2s ease-in-out infinite;
 }
 
 .tutorial-hand.blocked {
@@ -1282,6 +1291,30 @@ h2 {
   88% {
     transform: translate(-50%, -50%) translate(var(--tutorial-hand-dx, 0), var(--tutorial-hand-dy, 0)) rotate(-4deg)
       scale(0.96);
+  }
+}
+
+@keyframes tutorialClearPreview {
+  0%,
+  42% {
+    opacity: 0;
+    transform: scale(0.86);
+    filter: brightness(1);
+  }
+  52% {
+    opacity: 1;
+    transform: scale(1.08);
+    filter: brightness(1.18) drop-shadow(0 0 12px rgba(255, 244, 93, 0.72));
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1.02);
+    filter: brightness(1.14) drop-shadow(0 0 16px rgba(255, 244, 93, 0.68));
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.18);
+    filter: brightness(1.28);
   }
 }
 

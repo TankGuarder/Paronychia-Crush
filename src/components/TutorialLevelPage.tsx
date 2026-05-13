@@ -23,6 +23,8 @@ interface TutorialStep {
   requiresSwipe?: boolean;
   movablePositions?: BoardPosition[];
   lockedPositions?: BoardPosition[];
+  clearPreviewTile?: TileType;
+  clearPreviewPositions?: BoardPosition[];
 }
 
 const tutorialSteps: TutorialStep[] = [
@@ -59,6 +61,12 @@ const tutorialSteps: TutorialStep[] = [
     nextLabel: '我來滑滑看',
     requiresSwipe: true,
     movablePositions: [[2, 1]],
+    clearPreviewTile: 'ointment',
+    clearPreviewPositions: [
+      [1, 0],
+      [1, 1],
+      [1, 2],
+    ],
   },
   {
     title: 'Step 3：三個一樣會消除',
@@ -199,7 +207,9 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
               const isEnd = samePosition(step.swipeTo, position);
               const isMovable = includesPosition(step.movablePositions, position);
               const isLocked = includesPosition(step.lockedPositions, position) || cell === 'obstacle';
+              const isClearPreview = includesPosition(step.clearPreviewPositions, position);
               const icon = cell === 'obstacle' ? obstacleIcon : cell === 'empty' ? undefined : tileMap.get(cell)?.icon;
+              const previewIcon = step.clearPreviewTile ? tileMap.get(step.clearPreviewTile)?.icon : undefined;
 
               return (
                 <button
@@ -214,6 +224,9 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
                   onPointerUp={handlePointerUp}
                 >
                   {icon && <img src={icon} alt="" />}
+                  {isClearPreview && previewIcon && (
+                    <img className="tutorial-clear-preview" src={previewIcon} alt="" aria-hidden="true" />
+                  )}
                 </button>
               );
             }),
