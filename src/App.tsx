@@ -4,6 +4,8 @@ import { GamePage } from './components/GamePage';
 import { HomePage } from './components/HomePage';
 import { QuizPage } from './components/QuizPage';
 import { SummaryPage } from './components/SummaryPage';
+import { TutorialDemoOverlay } from './components/TutorialDemoOverlay';
+import { TutorialLevelPage } from './components/TutorialLevelPage';
 import { VideoPage } from './components/VideoPage';
 import { levels } from './data/levels';
 import { gameRules } from './data/rules';
@@ -18,6 +20,16 @@ const initialRunState: GameRunState = {
   completedLevel: 0,
   score: 0,
   timeBonus: 0,
+};
+
+const tutorialStorageKey = 'paronychiaTutorialState';
+
+const hasFinishedTutorial = () =>
+  window.localStorage.getItem(tutorialStorageKey) === 'completed' ||
+  window.localStorage.getItem(tutorialStorageKey) === 'skipped';
+
+const setTutorialState = (state: 'completed' | 'skipped') => {
+  window.localStorage.setItem(tutorialStorageKey, state);
 };
 
 export default function App() {
@@ -74,6 +86,18 @@ export default function App() {
       ...initialRunState,
       nickname: current.nickname,
       lineUserId: current.lineUserId,
+      screen: hasFinishedTutorial() ? 'game' : 'tutorialVideo',
+    }));
+  };
+
+  const enterFormalFirstLevel = (tutorialState: 'completed' | 'skipped') => {
+    setTutorialState(tutorialState);
+    setRunState((current) => ({
+      ...current,
+      currentLevelIndex: 0,
+      completedLevel: 0,
+      score: 0,
+      timeBonus: 0,
       screen: 'game',
     }));
   };
@@ -156,6 +180,21 @@ export default function App() {
     return <VideoPage level={currentLevel} isFinalLevel={isFinalLevel} onContinue={handleVideoDone} />;
   }
 
+  if (screen === 'tutorialVideo' && levels[0].demo) {
+    return (
+      <TutorialDemoOverlay
+        boardSize={levels[0].boardSize}
+        demo={levels[0].demo}
+        onDone={() => setRunState((current) => ({ ...current, screen: 'tutorialLevel' }))}
+        onSkip={() => enterFormalFirstLevel('skipped')}
+      />
+    );
+  }
+
+  if (screen === 'tutorialLevel') {
+    return <TutorialLevelPage onComplete={() => enterFormalFirstLevel('completed')} onSkip={() => enterFormalFirstLevel('skipped')} />;
+  }
+
   if (screen === 'quiz') {
     return <QuizPage level={currentLevel} rules={gameRules} onCorrect={handleQuizCorrect} onWrong={() => void finishRun()} />;
   }
@@ -184,6 +223,7 @@ export default function App() {
       onLevelPassed={handleLevelPassed}
       onTimeUpSettle={() => void finishRun()}
       onTimeUpQuiz={handleQuizStart}
+      suppressDemo={hasFinishedTutorial()}
     />
   );
 }

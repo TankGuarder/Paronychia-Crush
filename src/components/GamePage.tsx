@@ -37,6 +37,7 @@ interface GamePageProps {
   onLevelPassed: () => void;
   onTimeUpSettle: () => void;
   onTimeUpQuiz: () => void;
+  suppressDemo?: boolean;
 }
 
 export function GamePage({
@@ -48,13 +49,14 @@ export function GamePage({
   onLevelPassed,
   onTimeUpSettle,
   onTimeUpQuiz,
+  suppressDemo = false,
 }: GamePageProps) {
   const [board, setBoard] = useState<BoardCell[][]>(() => createBoard(level.boardSize, level.obstacles));
   const [secondsLeft, setSecondsLeft] = useState(level.secondsPerLevel + timeBonus);
   const [passed, setPassed] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [lastMessage, setLastMessage] = useState('請滑動主方塊，朝相鄰方塊交換並形成三消。');
-  const [isDemoActive, setIsDemoActive] = useState(Boolean(level.demo));
+  const [isDemoActive, setIsDemoActive] = useState(Boolean(level.demo) && !suppressDemo);
   const [hintMove, setHintMove] = useState<SuggestedMove | null>(null);
   const [interactionTick, setInteractionTick] = useState(0);
   const [animation, setAnimation] = useState<BoardAnimationState | null>(null);
@@ -166,7 +168,7 @@ export function GamePage({
     setSecondsLeft(level.secondsPerLevel + timeBonus);
     setPassed(false);
     setTimedOut(false);
-    setIsDemoActive(Boolean(level.demo));
+    setIsDemoActive(Boolean(level.demo) && !suppressDemo);
     setHintMove(null);
     setAnimation(null);
     setIsResolving(false);
@@ -176,7 +178,7 @@ export function GamePage({
         ? `互動題答對，增加 ${timeBonus} 秒，繼續挑戰。`
         : '請滑動主方塊，朝相鄰方塊交換並形成三消。',
     );
-  }, [level.boardSize, level.demo, level.levelId, level.obstacles, level.secondsPerLevel, timeBonus]);
+  }, [level.boardSize, level.demo, level.levelId, level.obstacles, level.secondsPerLevel, suppressDemo, timeBonus]);
 
   useEffect(() => {
     if (!level.demo || !isDemoActive) {

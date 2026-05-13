@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 import { obstacleDefinitions } from '../data/obstacles';
 import { tileDefinitions } from '../data/tiles';
 import hintHandIcon from '../assets/icons/hint-hand.svg';
@@ -10,6 +10,8 @@ const obstacleMap = new Map(obstacleDefinitions.map((obstacle) => [obstacle.id, 
 interface TutorialDemoOverlayProps {
   boardSize: number;
   demo: LevelDemoConfig;
+  onDone?: () => void;
+  onSkip?: () => void;
 }
 
 const keyOf = ([row, col]: [number, number]) => `${row}-${col}`;
@@ -19,7 +21,7 @@ const positionToPercent = ([row, col]: [number, number], boardSize: number) => (
   y: ((row + 0.5) / boardSize) * 100,
 });
 
-export function TutorialDemoOverlay({ boardSize, demo }: TutorialDemoOverlayProps) {
+export function TutorialDemoOverlay({ boardSize, demo, onDone, onSkip }: TutorialDemoOverlayProps) {
   const tileDefinition = tileMap.get(demo.matchTileType);
   const obstacleDefinition = obstacleMap.get(demo.obstacleType);
   const matchKeys = new Set(demo.matchPositions.map(keyOf));
@@ -36,9 +38,23 @@ export function TutorialDemoOverlay({ boardSize, demo }: TutorialDemoOverlayProp
     '--demo-hand-dy': `${endPoint.y - startPoint.y}%`,
   } as CSSProperties;
 
+  useEffect(() => {
+    if (!onDone) {
+      return;
+    }
+
+    const timer = window.setTimeout(onDone, demo.durationMs);
+    return () => window.clearTimeout(timer);
+  }, [demo.durationMs, onDone]);
+
   return (
     <div className="demo-backdrop" role="dialog" aria-modal="true" aria-label={demo.title}>
       <section className="demo-panel">
+        {onSkip && (
+          <button className="tutorial-skip-button" type="button" onClick={onSkip}>
+            跳過
+          </button>
+        )}
         <p className="eyebrow">教學示範</p>
         <h2>{demo.title}</h2>
         <p>{demo.message}</p>
@@ -58,15 +74,24 @@ export function TutorialDemoOverlay({ boardSize, demo }: TutorialDemoOverlayProp
             return (
               <div
                 key={key}
-                className={`demo-cell ${isMatch ? 'demo-match' : ''} ${isObstacle ? 'demo-obstacle' : ''}`}
+                className={`demo-cell ${isMatch ? 'demo-match' : ''} ${isObstacle ? 'demo-obstacle' : ''} ${
+                  key === keyOf(swipeFrom) ? 'demo-start-cell' : ''
+                } ${key === keyOf(swipeTo) ? 'demo-end-cell' : ''}`}
               >
                 {icon && <img src={icon} alt="" />}
                 {isMatch && <span className="demo-spark" />}
                 {isObstacle && <span className="demo-ring" />}
+                {key === keyOf(swipeFrom) && <span className="demo-point-label">起點</span>}
+                {key === keyOf(swipeTo) && <span className="demo-point-label end">終點</span>}
               </div>
             );
           })}
           <svg className="demo-swipe-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <marker id="demoArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M 0 0 L 8 4 L 0 8 z" />
+              </marker>
+            </defs>
             <line x1={startPoint.x} y1={startPoint.y} x2={endPoint.x} y2={endPoint.y} />
             <circle cx={startPoint.x} cy={startPoint.y} r="2.8" />
             <circle cx={endPoint.x} cy={endPoint.y} r="3.6" />
