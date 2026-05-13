@@ -6,7 +6,6 @@ import type { BoardPosition, TileType } from '../types/game';
 
 interface TutorialLevelPageProps {
   initialStep: number;
-  onShowDemo: () => void;
   onComplete: () => void;
   onSkip: () => void;
 }
@@ -24,14 +23,12 @@ interface TutorialStep {
   requiresSwipe?: boolean;
   movablePositions?: BoardPosition[];
   lockedPositions?: BoardPosition[];
-  blockedDemo?: boolean;
-  showDemoNext?: boolean;
 }
 
 const tutorialSteps: TutorialStep[] = [
   {
     title: 'Step 1：先看目標',
-    message: '目標是清掉發紅手指。移動工具方塊，讓三個一樣的工具在障礙旁邊連線。',
+    message: '目標是清掉發紅手指障礙。移動工具方塊，讓三個一樣的工具在障礙旁邊連線。',
     reason: '工具方塊可以移動；發紅手指是障礙，不能直接移動。',
     board: [
       ['ointment', 'socks', 'lotion'],
@@ -46,29 +43,12 @@ const tutorialSteps: TutorialStep[] = [
       [2, 1],
     ],
     lockedPositions: [[1, 1]],
-    nextLabel: '觀看滑動示範',
-    showDemoNext: true,
-  },
-  {
-    title: 'Step 3：障礙不能移動',
-    message: '手指碰到障礙時，障礙不會動。請移動旁邊亮起來的工具方塊。',
-    reason: '障礙要靠旁邊的工具方塊消除，不能直接拖走。',
-    board: [
-      ['ointment', 'socks', 'lotion'],
-      ['gloves', 'obstacle', 'cottonSwab'],
-      ['socks', 'ointment', 'gloves'],
-    ],
-    swipeFrom: [1, 1],
-    swipeTo: [1, 2],
-    movablePositions: [[1, 2]],
-    lockedPositions: [[1, 1]],
     nextLabel: '下一步',
-    blockedDemo: true,
   },
   {
-    title: 'Step 4：請滑動亮起來的方塊',
-    message: '從黃色起點開始，把藥膏往上滑到終點。',
-    reason: '按住方塊，往上下左右滑，就能交換相鄰方塊。',
+    title: 'Step 2：滑動亮起來的方塊',
+    message: '請按住亮起來的藥膏，往上滑到提示的位置。',
+    reason: '按住工具方塊，往上下左右滑，就能交換相鄰方塊。',
     board: [
       ['socks', 'gloves', 'lotion'],
       ['ointment', 'socks', 'ointment'],
@@ -81,7 +61,7 @@ const tutorialSteps: TutorialStep[] = [
     movablePositions: [[2, 1]],
   },
   {
-    title: 'Step 5：三個一樣會消除',
+    title: 'Step 3：三個一樣會消除',
     message: '很好！三個藥膏連成一排，就會消除。',
     reason: '消除發生在障礙旁邊時，障礙也會被清掉。',
     board: [
@@ -92,7 +72,7 @@ const tutorialSteps: TutorialStep[] = [
     nextLabel: '下一步',
   },
   {
-    title: 'Step 6：障礙旁邊消除',
+    title: 'Step 4：障礙旁邊消除',
     message: '這次把藥膏往上滑，讓障礙旁邊的三個藥膏消除。',
     reason: '障礙旁邊有工具方塊被消除，障礙也會消失。',
     board: [
@@ -148,7 +128,7 @@ const getGuideStyle = (from?: BoardPosition, to?: BoardPosition): CSSProperties 
   } as CSSProperties;
 };
 
-export function TutorialLevelPage({ initialStep, onShowDemo, onComplete, onSkip }: TutorialLevelPageProps) {
+export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialLevelPageProps) {
   const [stepIndex, setStepIndex] = useState(initialStep);
   const [dragStart, setDragStart] = useState<{ position: BoardPosition; x: number; y: number } | null>(null);
   const [feedback, setFeedback] = useState('先看清楚：工具方塊可以移動，障礙不能移動。');
@@ -161,11 +141,6 @@ export function TutorialLevelPage({ initialStep, onShowDemo, onComplete, onSkip 
   }, [initialStep]);
 
   const goNext = () => {
-    if (step.showDemoNext) {
-      onShowDemo();
-      return;
-    }
-
     if (stepIndex >= tutorialSteps.length - 1) {
       onComplete();
       return;
@@ -201,7 +176,7 @@ export function TutorialLevelPage({ initialStep, onShowDemo, onComplete, onSkip 
       setFeedback('做得很好，方塊已經滑到正確位置。');
       window.setTimeout(goNext, 520);
     } else {
-      setFeedback('再試一次，從黃色起點滑到紫色終點。');
+      setFeedback('再試一次，從亮起來的藥膏往上滑。');
     }
     setDragStart(null);
   };
@@ -239,10 +214,6 @@ export function TutorialLevelPage({ initialStep, onShowDemo, onComplete, onSkip 
                   onPointerUp={handlePointerUp}
                 >
                   {icon && <img src={icon} alt="" />}
-                  {isStart && <span>起點</span>}
-                  {isEnd && <span>終點</span>}
-                  {isMovable && !isStart && <span>可移動</span>}
-                  {isLocked && !isStart && !isEnd && <span>不能動</span>}
                 </button>
               );
             }),
@@ -251,7 +222,7 @@ export function TutorialLevelPage({ initialStep, onShowDemo, onComplete, onSkip 
           {step.swipeFrom && step.swipeTo && (
             <>
               <span className="tutorial-track" style={guideStyle} aria-hidden="true" />
-              <span className={`tutorial-hand ${step.blockedDemo ? 'blocked' : ''}`} style={guideStyle} aria-hidden="true">
+              <span className="tutorial-hand" style={guideStyle} aria-hidden="true">
                 <img src={hintHandIcon} alt="" />
               </span>
             </>

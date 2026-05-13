@@ -108,11 +108,6 @@ export default function App() {
     }));
   };
 
-  const showTutorialDemo = () => {
-    setTutorialResumeStep(1);
-    setRunState((current) => ({ ...current, screen: 'tutorialVideo' }));
-  };
-
   const finishRun = useCallback(async () => {
     const entry: LeaderboardEntry = {
       nickname: nickname.trim(),
@@ -206,7 +201,6 @@ export default function App() {
     return (
       <TutorialLevelPage
         initialStep={tutorialResumeStep}
-        onShowDemo={showTutorialDemo}
         onComplete={() => enterFormalFirstLevel('completed')}
         onSkip={() => enterFormalFirstLevel('skipped')}
       />

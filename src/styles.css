@@ -980,26 +980,6 @@ h2 {
   outline-color: #c9adff;
 }
 
-.demo-point-label {
-  position: absolute;
-  left: 50%;
-  bottom: -10px;
-  z-index: 8;
-  min-width: 42px;
-  padding: 3px 7px;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 999px;
-  background: #fff45d;
-  color: #55306e;
-  font-size: 0.72rem;
-  font-weight: 950;
-  transform: translateX(-50%);
-}
-
-.demo-point-label.end {
-  background: #c9adff;
-}
-
 .demo-obstacle {
   border-color: #fff4cf;
   background: linear-gradient(180deg, #ffd8ca, #ff8f91);
@@ -1200,21 +1180,6 @@ h2 {
   height: 88%;
   object-fit: contain;
   filter: drop-shadow(0 4px 3px rgba(48, 25, 88, 0.22));
-}
-
-.tutorial-cell span {
-  position: absolute;
-  bottom: -10px;
-  left: 50%;
-  min-width: 42px;
-  padding: 3px 7px;
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 999px;
-  background: #fff45d;
-  color: #55306e;
-  font-size: 0.72rem;
-  font-weight: 950;
-  transform: translateX(-50%);
 }
 
 .tutorial-obstacle {

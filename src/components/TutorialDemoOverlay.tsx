@@ -55,7 +55,7 @@ export function TutorialDemoOverlay({ boardSize, demo, onDone, onSkip }: Tutoria
             跳過
           </button>
         )}
-        <p className="eyebrow">Step 2：滑動示範</p>
+        <p className="eyebrow">滑動示範</p>
         <h2>{demo.title}</h2>
         <p>{demo.message}</p>
         <div
@@ -81,8 +81,6 @@ export function TutorialDemoOverlay({ boardSize, demo, onDone, onSkip }: Tutoria
                 {icon && <img src={icon} alt="" />}
                 {isMatch && <span className="demo-spark" />}
                 {isObstacle && <span className="demo-ring" />}
-                {key === keyOf(swipeFrom) && <span className="demo-point-label">起點</span>}
-                {key === keyOf(swipeTo) && <span className="demo-point-label end">終點</span>}
               </div>
             );
           })}
