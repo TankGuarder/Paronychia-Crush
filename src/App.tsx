@@ -23,17 +23,21 @@ const initialRunState: GameRunState = {
 };
 
 const tutorialStorageKey = 'paronychiaTutorialState';
+const nicknameStorageKey = 'paronychiaLastNickname';
 
 const hasFinishedTutorial = () =>
-  window.localStorage.getItem(tutorialStorageKey) === 'completed' ||
-  window.localStorage.getItem(tutorialStorageKey) === 'skipped';
+  window.sessionStorage.getItem(tutorialStorageKey) === 'completed' ||
+  window.sessionStorage.getItem(tutorialStorageKey) === 'skipped';
 
 const setTutorialState = (state: 'completed' | 'skipped') => {
-  window.localStorage.setItem(tutorialStorageKey, state);
+  window.sessionStorage.setItem(tutorialStorageKey, state);
 };
+
+const getSavedNickname = () => window.localStorage.getItem(nicknameStorageKey) ?? '';
 
 export default function App() {
   const [runState, setRunState] = useState<GameRunState>(initialRunState);
+  const [tutorialResumeStep, setTutorialResumeStep] = useState(0);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [rank, setRank] = useState(0);
   const liffState = useLiffProfile();
@@ -67,7 +71,7 @@ export default function App() {
     setRunState((current) => ({
       ...current,
       lineUserId: liffState.profile.lineUserId,
-      nickname: current.nickname || liffState.profile.displayName || '',
+      nickname: current.nickname || getSavedNickname() || liffState.profile.displayName || '',
     }));
   }, [liffState.isLoading, liffState.profile.displayName, liffState.profile.lineUserId]);
 
@@ -82,11 +86,13 @@ export default function App() {
     if (!nickname.trim()) {
       return;
     }
+    window.localStorage.setItem(nicknameStorageKey, nickname.trim());
+    setTutorialResumeStep(0);
     setRunState((current) => ({
       ...initialRunState,
       nickname: current.nickname,
       lineUserId: current.lineUserId,
-      screen: hasFinishedTutorial() ? 'game' : 'tutorialVideo',
+      screen: hasFinishedTutorial() ? 'game' : 'tutorialLevel',
     }));
   };
 
@@ -100,6 +106,11 @@ export default function App() {
       timeBonus: 0,
       screen: 'game',
     }));
+  };
+
+  const showTutorialDemo = () => {
+    setTutorialResumeStep(1);
+    setRunState((current) => ({ ...current, screen: 'tutorialVideo' }));
   };
 
   const finishRun = useCallback(async () => {
@@ -192,7 +203,14 @@ export default function App() {
   }
 
   if (screen === 'tutorialLevel') {
-    return <TutorialLevelPage onComplete={() => enterFormalFirstLevel('completed')} onSkip={() => enterFormalFirstLevel('skipped')} />;
+    return (
+      <TutorialLevelPage
+        initialStep={tutorialResumeStep}
+        onShowDemo={showTutorialDemo}
+        onComplete={() => enterFormalFirstLevel('completed')}
+        onSkip={() => enterFormalFirstLevel('skipped')}
+      />
+    );
   }
 
   if (screen === 'quiz') {

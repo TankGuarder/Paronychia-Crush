@@ -1,10 +1,12 @@
-import { useMemo, useState, type CSSProperties, type PointerEvent } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type PointerEvent } from 'react';
 import { obstacleDefinitions } from '../data/obstacles';
 import { tileDefinitions } from '../data/tiles';
 import hintHandIcon from '../assets/icons/hint-hand.svg';
 import type { BoardPosition, TileType } from '../types/game';
 
 interface TutorialLevelPageProps {
+  initialStep: number;
+  onShowDemo: () => void;
   onComplete: () => void;
   onSkip: () => void;
 }
@@ -16,20 +18,21 @@ interface TutorialStep {
   message: string;
   reason: string;
   board: TutorialCell[][];
+  nextLabel: string;
   swipeFrom?: BoardPosition;
   swipeTo?: BoardPosition;
-  nextLabel: string;
   requiresSwipe?: boolean;
   movablePositions?: BoardPosition[];
   lockedPositions?: BoardPosition[];
   blockedDemo?: boolean;
+  showDemoNext?: boolean;
 }
 
 const tutorialSteps: TutorialStep[] = [
   {
-    title: 'Step 1：先認識方塊',
-    message: '亮起來的是可以移動的方塊，紅紅的手指是障礙，不能移動。',
-    reason: '正式遊戲中，請滑動藥膏、襪子、手套、乳液、棉棒這些主要方塊。',
+    title: 'Step 1：先看目標',
+    message: '目標是清掉發紅手指。移動工具方塊，讓三個一樣的工具在障礙旁邊連線。',
+    reason: '工具方塊可以移動；發紅手指是障礙，不能直接移動。',
     board: [
       ['ointment', 'socks', 'lotion'],
       ['gloves', 'obstacle', 'cottonSwab'],
@@ -43,12 +46,13 @@ const tutorialSteps: TutorialStep[] = [
       [2, 1],
     ],
     lockedPositions: [[1, 1]],
-    nextLabel: '知道了',
+    nextLabel: '觀看滑動示範',
+    showDemoNext: true,
   },
   {
-    title: 'Step 2：障礙不能移動',
-    message: '手指碰到障礙時，障礙不會動。請移動旁邊亮起來的方塊。',
-    reason: '障礙要靠旁邊的主要方塊消除，不能直接拖走。',
+    title: 'Step 3：障礙不能移動',
+    message: '手指碰到障礙時，障礙不會動。請移動旁邊亮起來的工具方塊。',
+    reason: '障礙要靠旁邊的工具方塊消除，不能直接拖走。',
     board: [
       ['ointment', 'socks', 'lotion'],
       ['gloves', 'obstacle', 'cottonSwab'],
@@ -62,9 +66,9 @@ const tutorialSteps: TutorialStep[] = [
     blockedDemo: true,
   },
   {
-    title: 'Step 3：把方塊滑過去',
+    title: 'Step 4：請滑動亮起來的方塊',
     message: '從黃色起點開始，把藥膏往上滑到終點。',
-    reason: '手指按住方塊，往旁邊或上下滑，就能交換位置。',
+    reason: '按住方塊，往上下左右滑，就能交換相鄰方塊。',
     board: [
       ['socks', 'gloves', 'lotion'],
       ['ointment', 'socks', 'ointment'],
@@ -77,9 +81,9 @@ const tutorialSteps: TutorialStep[] = [
     movablePositions: [[2, 1]],
   },
   {
-    title: 'Step 4：三個一樣會消除',
+    title: 'Step 5：三個一樣會消除',
     message: '很好！三個藥膏連成一排，就會消除。',
-    reason: '消除方塊時，附近的障礙才有機會被清掉。',
+    reason: '消除發生在障礙旁邊時，障礙也會被清掉。',
     board: [
       ['socks', 'gloves', 'lotion'],
       ['ointment', 'ointment', 'ointment'],
@@ -88,9 +92,9 @@ const tutorialSteps: TutorialStep[] = [
     nextLabel: '下一步',
   },
   {
-    title: 'Step 5：障礙旁邊消除',
+    title: 'Step 6：障礙旁邊消除',
     message: '這次把藥膏往上滑，讓障礙旁邊的三個藥膏消除。',
-    reason: '障礙旁邊有方塊被消除，障礙也會消失。',
+    reason: '障礙旁邊有工具方塊被消除，障礙也會消失。',
     board: [
       ['socks', 'obstacle', 'lotion'],
       ['ointment', 'socks', 'ointment'],
@@ -105,8 +109,8 @@ const tutorialSteps: TutorialStep[] = [
   },
   {
     title: '完成教學',
-    message: '記住這句話：障礙旁邊消除，障礙也會消失。',
-    reason: '正式關卡就是把所有障礙清掉。準備好就開始第一關。',
+    message: '記住：移動工具方塊，讓三個一樣的工具在障礙旁邊連線。',
+    reason: '正式關卡就是把所有發紅手指障礙清掉。準備好就開始第一關。',
     board: [
       ['socks', 'empty', 'lotion'],
       ['empty', 'empty', 'empty'],
@@ -144,25 +148,36 @@ const getGuideStyle = (from?: BoardPosition, to?: BoardPosition): CSSProperties 
   } as CSSProperties;
 };
 
-export function TutorialLevelPage({ onComplete, onSkip }: TutorialLevelPageProps) {
-  const [stepIndex, setStepIndex] = useState(0);
+export function TutorialLevelPage({ initialStep, onShowDemo, onComplete, onSkip }: TutorialLevelPageProps) {
+  const [stepIndex, setStepIndex] = useState(initialStep);
   const [dragStart, setDragStart] = useState<{ position: BoardPosition; x: number; y: number } | null>(null);
-  const [feedback, setFeedback] = useState('先看清楚：亮起來的方塊可以動，障礙不能動。');
+  const [feedback, setFeedback] = useState('先看清楚：工具方塊可以移動，障礙不能移動。');
   const step = tutorialSteps[stepIndex];
   const guideStyle = useMemo(() => getGuideStyle(step.swipeFrom, step.swipeTo), [step.swipeFrom, step.swipeTo]);
 
+  useEffect(() => {
+    setStepIndex(initialStep);
+    setFeedback(initialStep === 0 ? '先看清楚：工具方塊可以移動，障礙不能移動。' : '看懂後按下一步。');
+  }, [initialStep]);
+
   const goNext = () => {
+    if (step.showDemoNext) {
+      onShowDemo();
+      return;
+    }
+
     if (stepIndex >= tutorialSteps.length - 1) {
       onComplete();
       return;
     }
+
     setStepIndex((current) => current + 1);
     setFeedback(tutorialSteps[stepIndex + 1].requiresSwipe ? '請滑動亮起來的方塊。' : '看懂後按下一步。');
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLButtonElement>, row: number, col: number, cell: TutorialCell) => {
     if (cell === 'obstacle') {
-      setFeedback('障礙不能移動，請移動旁邊亮起來的方塊。');
+      setFeedback('障礙不能移動，請移動旁邊亮起來的工具方塊。');
       return;
     }
 

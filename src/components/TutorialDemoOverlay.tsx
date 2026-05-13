@@ -55,7 +55,7 @@ export function TutorialDemoOverlay({ boardSize, demo, onDone, onSkip }: Tutoria
             跳過
           </button>
         )}
-        <p className="eyebrow">教學示範</p>
+        <p className="eyebrow">Step 2：滑動示範</p>
         <h2>{demo.title}</h2>
         <p>{demo.message}</p>
         <div
@@ -87,11 +87,6 @@ export function TutorialDemoOverlay({ boardSize, demo, onDone, onSkip }: Tutoria
             );
           })}
           <svg className="demo-swipe-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <defs>
-              <marker id="demoArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-                <path d="M 0 0 L 8 4 L 0 8 z" />
-              </marker>
-            </defs>
             <line x1={startPoint.x} y1={startPoint.y} x2={endPoint.x} y2={endPoint.y} />
             <circle cx={startPoint.x} cy={startPoint.y} r="2.8" />
             <circle cx={endPoint.x} cy={endPoint.y} r="3.6" />
