@@ -1148,6 +1148,12 @@ h2 {
   background: rgba(255, 244, 93, 0.24);
 }
 
+.tutorial-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
 .tutorial-mini-board {
   position: relative;
   display: grid;
@@ -1189,6 +1195,20 @@ h2 {
   opacity: 0;
   pointer-events: none;
   animation: tutorialClearPreview 3.2s ease-in-out infinite;
+}
+
+.tutorial-red-outline {
+  border-color: #e92f42;
+  border-width: 5px;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.62),
+    0 0 0 4px rgba(233, 47, 66, 0.22),
+    0 0 18px rgba(233, 47, 66, 0.46);
+  animation: tutorialRedLine 2.8s ease-in-out infinite;
+}
+
+.tutorial-fade-out img {
+  animation: tutorialFadeOut 2.8s ease-in-out infinite;
 }
 
 .tutorial-obstacle {
@@ -1315,6 +1335,42 @@ h2 {
     opacity: 0;
     transform: scale(0.18);
     filter: brightness(1.28);
+  }
+}
+
+@keyframes tutorialRedLine {
+  0%,
+  24% {
+    border-color: #e92f42;
+    transform: scale(1);
+  }
+  42% {
+    border-color: #ff4e5c;
+    transform: scale(1.04);
+  }
+  62%,
+  100% {
+    border-color: rgba(233, 47, 66, 0.2);
+    transform: scale(1);
+  }
+}
+
+@keyframes tutorialFadeOut {
+  0%,
+  36% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  56% {
+    opacity: 0.82;
+    transform: scale(1.08);
+    filter: brightness(1.18) drop-shadow(0 0 14px rgba(255, 244, 93, 0.72));
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.22);
+    filter: brightness(1.24);
   }
 }
 

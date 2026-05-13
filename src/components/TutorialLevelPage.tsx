@@ -25,6 +25,8 @@ interface TutorialStep {
   lockedPositions?: BoardPosition[];
   clearPreviewTile?: TileType;
   clearPreviewPositions?: BoardPosition[];
+  redOutlinePositions?: BoardPosition[];
+  fadeOutPositions?: BoardPosition[];
 }
 
 const tutorialSteps: TutorialStep[] = [
@@ -49,8 +51,8 @@ const tutorialSteps: TutorialStep[] = [
   },
   {
     title: 'Step 2：滑動亮起來的方塊',
-    message: '請按住亮起來的藥膏，往上滑到提示的位置。',
-    reason: '按住工具方塊，往上下左右滑，就能交換相鄰方塊。',
+    message: '請按住亮起來的藥膏，往上滑到中間的襪子位置。',
+    reason: '藥膏滑到襪子的位置後，三個藥膏會連成一排並消除。',
     board: [
       ['socks', 'gloves', 'lotion'],
       ['ointment', 'socks', 'ointment'],
@@ -69,42 +71,27 @@ const tutorialSteps: TutorialStep[] = [
     ],
   },
   {
-    title: 'Step 3：三個一樣會消除',
-    message: '很好！三個藥膏連成一排，就會消除。',
-    reason: '消除發生在障礙旁邊時，障礙也會被清掉。',
+    title: 'Step 3：障礙也會一起消失',
+    message: '三個藥膏在障礙旁邊連線後，藥膏會消除，旁邊的發紅手指障礙也會消失。',
+    reason: '正式關卡就是重複這件事：在障礙旁邊消除工具方塊，把所有障礙清掉。',
     board: [
-      ['socks', 'gloves', 'lotion'],
+      ['socks', 'obstacle', 'lotion'],
       ['ointment', 'ointment', 'ointment'],
       ['gloves', 'empty', 'cottonSwab'],
     ],
-    nextLabel: '下一步',
-  },
-  {
-    title: 'Step 4：障礙旁邊消除',
-    message: '這次把藥膏往上滑，讓障礙旁邊的三個藥膏消除。',
-    reason: '障礙旁邊有工具方塊被消除，障礙也會消失。',
-    board: [
-      ['socks', 'obstacle', 'lotion'],
-      ['ointment', 'socks', 'ointment'],
-      ['gloves', 'ointment', 'cottonSwab'],
-    ],
-    swipeFrom: [2, 1],
-    swipeTo: [1, 1],
-    nextLabel: '清除障礙',
-    requiresSwipe: true,
-    movablePositions: [[2, 1]],
-    lockedPositions: [[0, 1]],
-  },
-  {
-    title: '完成教學',
-    message: '記住：移動工具方塊，讓三個一樣的工具在障礙旁邊連線。',
-    reason: '正式關卡就是把所有發紅手指障礙清掉。準備好就開始第一關。',
-    board: [
-      ['socks', 'empty', 'lotion'],
-      ['empty', 'empty', 'empty'],
-      ['gloves', 'empty', 'cottonSwab'],
-    ],
     nextLabel: '開始第一關',
+    lockedPositions: [[0, 1]],
+    redOutlinePositions: [
+      [1, 0],
+      [1, 1],
+      [1, 2],
+    ],
+    fadeOutPositions: [
+      [0, 1],
+      [1, 0],
+      [1, 1],
+      [1, 2],
+    ],
   },
 ];
 
@@ -136,16 +123,23 @@ const getGuideStyle = (from?: BoardPosition, to?: BoardPosition): CSSProperties 
   } as CSSProperties;
 };
 
+const getDefaultFeedback = (stepIndex: number) => {
+  if (tutorialSteps[stepIndex]?.requiresSwipe) {
+    return '請滑動亮起來的方塊。';
+  }
+  return stepIndex === 0 ? '先看清楚：工具方塊可以移動，障礙不能移動。' : '看懂後按下一步。';
+};
+
 export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialLevelPageProps) {
   const [stepIndex, setStepIndex] = useState(initialStep);
   const [dragStart, setDragStart] = useState<{ position: BoardPosition; x: number; y: number } | null>(null);
-  const [feedback, setFeedback] = useState('先看清楚：工具方塊可以移動，障礙不能移動。');
+  const [feedback, setFeedback] = useState(getDefaultFeedback(initialStep));
   const step = tutorialSteps[stepIndex];
   const guideStyle = useMemo(() => getGuideStyle(step.swipeFrom, step.swipeTo), [step.swipeFrom, step.swipeTo]);
 
   useEffect(() => {
     setStepIndex(initialStep);
-    setFeedback(initialStep === 0 ? '先看清楚：工具方塊可以移動，障礙不能移動。' : '看懂後按下一步。');
+    setFeedback(getDefaultFeedback(initialStep));
   }, [initialStep]);
 
   const goNext = () => {
@@ -154,8 +148,17 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
       return;
     }
 
-    setStepIndex((current) => current + 1);
-    setFeedback(tutorialSteps[stepIndex + 1].requiresSwipe ? '請滑動亮起來的方塊。' : '看懂後按下一步。');
+    const nextStep = stepIndex + 1;
+    setDragStart(null);
+    setStepIndex(nextStep);
+    setFeedback(getDefaultFeedback(nextStep));
+  };
+
+  const goBack = () => {
+    const previousStep = Math.max(0, stepIndex - 1);
+    setDragStart(null);
+    setStepIndex(previousStep);
+    setFeedback(getDefaultFeedback(previousStep));
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLButtonElement>, row: number, col: number, cell: TutorialCell) => {
@@ -181,10 +184,10 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
         : [dragStart.position[0] + (deltaY > 0 ? 1 : -1), dragStart.position[1]];
 
     if (samePosition(step.swipeFrom, dragStart.position) && samePosition(step.swipeTo, target)) {
-      setFeedback('做得很好，方塊已經滑到正確位置。');
-      window.setTimeout(goNext, 520);
+      setFeedback('做得很好，三個藥膏會慢慢連起來並消除。');
+      window.setTimeout(goNext, 1100);
     } else {
-      setFeedback('再試一次，從亮起來的藥膏往上滑。');
+      setFeedback('再試一次，從亮起來的藥膏往上滑到襪子。');
     }
     setDragStart(null);
   };
@@ -208,6 +211,8 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
               const isMovable = includesPosition(step.movablePositions, position);
               const isLocked = includesPosition(step.lockedPositions, position) || cell === 'obstacle';
               const isClearPreview = includesPosition(step.clearPreviewPositions, position);
+              const isRedOutlined = includesPosition(step.redOutlinePositions, position);
+              const shouldFadeOut = includesPosition(step.fadeOutPositions, position);
               const icon = cell === 'obstacle' ? obstacleIcon : cell === 'empty' ? undefined : tileMap.get(cell)?.icon;
               const previewIcon = step.clearPreviewTile ? tileMap.get(step.clearPreviewTile)?.icon : undefined;
 
@@ -218,7 +223,9 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
                     isStart ? 'tutorial-start' : ''
                   } ${isEnd ? 'tutorial-end' : ''} ${cell === 'empty' ? 'tutorial-empty' : ''} ${
                     isMovable ? 'tutorial-movable' : ''
-                  } ${isLocked ? 'tutorial-locked' : ''}`}
+                  } ${isLocked ? 'tutorial-locked' : ''} ${isRedOutlined ? 'tutorial-red-outline' : ''} ${
+                    shouldFadeOut ? 'tutorial-fade-out' : ''
+                  }`}
                   type="button"
                   onPointerDown={(event) => handlePointerDown(event, rowIndex, colIndex, cell)}
                   onPointerUp={handlePointerUp}
@@ -246,11 +253,18 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
         <p className="status-message" aria-live="polite">
           {feedback}
         </p>
-        {!step.requiresSwipe && (
-          <button className="primary-button" type="button" onClick={goNext}>
-            {step.nextLabel}
-          </button>
-        )}
+        <div className="tutorial-actions">
+          {stepIndex > 0 && (
+            <button className="secondary-button" type="button" onClick={goBack}>
+              回上一步
+            </button>
+          )}
+          {!step.requiresSwipe && (
+            <button className="primary-button" type="button" onClick={goNext}>
+              {step.nextLabel}
+            </button>
+          )}
+        </div>
       </section>
     </main>
   );
