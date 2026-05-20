@@ -73,6 +73,8 @@ export interface LevelConfig {
   passHint: string;
   videoTitle: string;
   videoMessage: string;
+  videoUrl?: string;
+  videoRequiredSeconds?: number;
   demo?: LevelDemoConfig;
 }
 

@@ -1,4 +1,5 @@
-import type { LevelConfig } from '../types/game';
+﻿import type { LevelConfig } from '../types/game';
+import whatIsParonychiaVideo from '../assets/videos/what-is-paronychia.mp4';
 
 const fixedVersion = 'research-v1';
 
@@ -20,8 +21,11 @@ export const levels: LevelConfig[] = [
     targetText: '清除全部 4 個障礙方塊',
     concept: '依醫囑用藥',
     passHint: '藥膏請依醫囑薄擦，不要自行加量。',
-    videoTitle: '藥膏使用',
-    videoMessage: '清潔後薄擦藥膏即可，若疼痛或化膿加重，請回診評估。',
+    videoTitle: '什麼是甲溝炎？',
+    videoMessage:
+      '甲溝炎→指甲旁邊的皮膚發炎\n常見症狀→紅、腫、痛、肉芽腫、流血、滲液\n常見部位→只要有指甲都會，其中大拇指和大腳趾最常見',
+    videoUrl: whatIsParonychiaVideo,
+    videoRequiredSeconds: 15,
 
     demo: {
       title: '滑動交換示範',
