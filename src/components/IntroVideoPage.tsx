@@ -25,7 +25,7 @@ export function IntroVideoPage({ onDone }: IntroVideoPageProps) {
         src={introVideoUrl}
         autoPlay
         playsInline
-        controls={false}
+        controls
         onEnded={onDone}
       />
       <button className="intro-skip-button" type="button" onClick={onDone}>
