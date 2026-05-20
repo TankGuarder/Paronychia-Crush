@@ -5,7 +5,7 @@ export type TileType =
   | 'lotion'
   | 'cottonSwab';
 
-export type Screen = 'home' | 'tutorialVideo' | 'tutorialLevel' | 'game' | 'video' | 'quiz' | 'summary';
+export type Screen = 'home' | 'introVideo' | 'tutorialVideo' | 'tutorialLevel' | 'game' | 'video' | 'quiz' | 'summary';
 
 export interface TileDefinition {
   id: TileType;

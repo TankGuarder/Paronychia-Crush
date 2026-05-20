@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AdminLeaderboardPage } from './components/AdminLeaderboardPage';
 import { GamePage } from './components/GamePage';
 import { HomePage } from './components/HomePage';
+import { IntroVideoPage } from './components/IntroVideoPage';
 import { QuizPage } from './components/QuizPage';
 import { SummaryPage } from './components/SummaryPage';
 import { TutorialDemoOverlay } from './components/TutorialDemoOverlay';
@@ -92,6 +93,13 @@ export default function App() {
       ...initialRunState,
       nickname: current.nickname,
       lineUserId: current.lineUserId,
+      screen: 'introVideo',
+    }));
+  };
+
+  const continueAfterIntro = () => {
+    setRunState((current) => ({
+      ...current,
       screen: hasFinishedTutorial() ? 'game' : 'tutorialLevel',
     }));
   };
@@ -184,6 +192,10 @@ export default function App() {
 
   if (screen === 'video') {
     return <VideoPage level={currentLevel} isFinalLevel={isFinalLevel} onContinue={handleVideoDone} />;
+  }
+
+  if (screen === 'introVideo') {
+    return <IntroVideoPage onDone={continueAfterIntro} />;
   }
 
   if (screen === 'tutorialVideo' && levels[0].demo) {
