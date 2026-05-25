@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties, type PointerEvent } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { obstacleDefinitions } from '../data/obstacles';
 import { tileDefinitions } from '../data/tiles';
 import hintHandIcon from '../assets/icons/hint-hand.svg';
@@ -21,7 +21,6 @@ interface TutorialStep {
   showLegend?: boolean;
   swipeFrom?: BoardPosition;
   swipeTo?: BoardPosition;
-  requiresSwipe?: boolean;
   movablePositions?: BoardPosition[];
   lockedPositions?: BoardPosition[];
   clearPreviewTile?: TileType;
@@ -39,9 +38,9 @@ const tutorialSteps: TutorialStep[] = [
     nextLabel: '看移動示範',
   },
   {
-    title: 'Step 2：短影片示範移動',
-    message: '請看手指從藥膏滑到襪子的位置，讓三個藥膏在障礙旁邊連成一條線。',
-    reason: '三個相同工具方塊連線消除時，只要碰到障礙方塊的上下左右，障礙方塊也會一起消除。',
+    title: 'Step 2：看工具方塊怎麼消除障礙',
+    message: '手指會自動把藥膏往上滑，讓三個藥膏在障礙旁邊連成一條線。',
+    reason: '工具方塊連成一線後，這些工具方塊會消除；旁邊的障礙方塊也會一起消失。',
     board: [
       ['socks', 'obstacle', 'lotion'],
       ['ointment', 'socks', 'ointment'],
@@ -50,7 +49,6 @@ const tutorialSteps: TutorialStep[] = [
     swipeFrom: [2, 1],
     swipeTo: [1, 1],
     nextLabel: '開始正式第一關',
-    requiresSwipe: true,
     movablePositions: [[2, 1]],
     lockedPositions: [[0, 1]],
     clearPreviewTile: 'ointment',
@@ -109,15 +107,14 @@ const getGuideStyle = (from?: BoardPosition, to?: BoardPosition): CSSProperties 
 };
 
 const getDefaultFeedback = (stepIndex: number) => {
-  if (tutorialSteps[stepIndex]?.requiresSwipe) {
-    return '可以跟著示範滑動，也可以直接看完後按開始。';
+  if (tutorialSteps[stepIndex]?.swipeFrom) {
+    return '請看動畫：工具方塊會滑動、連線，然後和障礙一起消失。';
   }
   return '工具方塊可以移動；障礙方塊不能移動。';
 };
 
 export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialLevelPageProps) {
   const [stepIndex, setStepIndex] = useState(initialStep);
-  const [dragStart, setDragStart] = useState<{ position: BoardPosition; x: number; y: number } | null>(null);
   const [feedback, setFeedback] = useState(getDefaultFeedback(initialStep));
   const step = tutorialSteps[stepIndex] ?? tutorialSteps[0];
   const guideStyle = useMemo(() => getGuideStyle(step.swipeFrom, step.swipeTo), [step.swipeFrom, step.swipeTo]);
@@ -135,47 +132,14 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
     }
 
     const nextStep = stepIndex + 1;
-    setDragStart(null);
     setStepIndex(nextStep);
     setFeedback(getDefaultFeedback(nextStep));
   };
 
   const goBack = () => {
     const previousStep = Math.max(0, stepIndex - 1);
-    setDragStart(null);
     setStepIndex(previousStep);
     setFeedback(getDefaultFeedback(previousStep));
-  };
-
-  const handlePointerDown = (event: PointerEvent<HTMLButtonElement>, row: number, col: number, cell: TutorialCell) => {
-    if (cell === 'obstacle') {
-      setFeedback('障礙方塊不能移動，請移動旁邊亮起來的工具方塊。');
-      return;
-    }
-
-    setDragStart({ position: [row, col], x: event.clientX, y: event.clientY });
-  };
-
-  const handlePointerUp = (event: PointerEvent<HTMLButtonElement>) => {
-    if (!dragStart || !step.requiresSwipe || !step.swipeFrom || !step.swipeTo) {
-      setDragStart(null);
-      return;
-    }
-
-    const deltaX = event.clientX - dragStart.x;
-    const deltaY = event.clientY - dragStart.y;
-    const target: BoardPosition =
-      Math.abs(deltaX) > Math.abs(deltaY)
-        ? [dragStart.position[0], dragStart.position[1] + (deltaX > 0 ? 1 : -1)]
-        : [dragStart.position[0] + (deltaY > 0 ? 1 : -1), dragStart.position[1]];
-
-    if (samePosition(step.swipeFrom, dragStart.position) && samePosition(step.swipeTo, target)) {
-      setFeedback('做得很好！藥膏連成一條線，旁邊的障礙也會消失。');
-      window.setTimeout(goNext, 1100);
-    } else {
-      setFeedback('這次方向不對，請從下方藥膏往上滑到襪子的位置。');
-    }
-    setDragStart(null);
   };
 
   return (
@@ -219,7 +183,7 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
         )}
 
         {step.board && (
-          <div className="tutorial-mini-board" aria-label="新手教學棋盤">
+          <div className="tutorial-mini-board tutorial-demo-board" aria-label="自動示範棋盤">
             {step.board.map((row, rowIndex) =>
               row.map((cell, colIndex) => {
                 const position: BoardPosition = [rowIndex, colIndex];
@@ -234,24 +198,22 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
                 const previewIcon = step.clearPreviewTile ? tileMap.get(step.clearPreviewTile)?.icon : undefined;
 
                 return (
-                  <button
+                  <div
                     key={`${rowIndex}-${colIndex}`}
                     className={`tutorial-cell ${cell === 'obstacle' ? 'tutorial-obstacle' : ''} ${
-                      isStart ? 'tutorial-start' : ''
+                      isStart ? 'tutorial-start tutorial-moving-source' : ''
                     } ${isEnd ? 'tutorial-end' : ''} ${cell === 'empty' ? 'tutorial-empty' : ''} ${
                       isMovable ? 'tutorial-movable' : ''
                     } ${isLocked ? 'tutorial-locked' : ''} ${isRedOutlined ? 'tutorial-red-outline' : ''} ${
                       shouldFadeOut ? 'tutorial-fade-out' : ''
                     }`}
-                    type="button"
-                    onPointerDown={(event) => handlePointerDown(event, rowIndex, colIndex, cell)}
-                    onPointerUp={handlePointerUp}
+                    style={isStart ? guideStyle : undefined}
                   >
-                    {icon && <img src={icon} alt="" />}
+                    {icon && <img className="tutorial-cell-icon" src={icon} alt="" />}
                     {isClearPreview && previewIcon && (
                       <img className="tutorial-clear-preview" src={previewIcon} alt="" aria-hidden="true" />
                     )}
-                  </button>
+                  </div>
                 );
               }),
             )}

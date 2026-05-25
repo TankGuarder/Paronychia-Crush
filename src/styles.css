@@ -1309,6 +1309,12 @@ h2 {
     inset 0 -9px 0 rgba(45, 23, 105, 0.3);
 }
 
+.tutorial-demo-board {
+  width: min(100%, 390px);
+  gap: 10px;
+  padding: 14px;
+}
+
 .tutorial-cell {
   position: relative;
   display: grid;
@@ -1320,11 +1326,17 @@ h2 {
   touch-action: none;
 }
 
-.tutorial-cell img {
+.tutorial-cell img,
+.tutorial-cell-icon {
   width: 88%;
   height: 88%;
   object-fit: contain;
   filter: drop-shadow(0 4px 3px rgba(48, 25, 88, 0.22));
+}
+
+.tutorial-moving-source .tutorial-cell-icon {
+  z-index: 8;
+  animation: tutorialToolSlide 3.2s ease-in-out infinite;
 }
 
 .tutorial-clear-preview {
@@ -1450,6 +1462,25 @@ h2 {
   88% {
     transform: translate(-50%, -50%) translate(var(--tutorial-hand-dx, 0), var(--tutorial-hand-dy, 0)) rotate(-4deg)
       scale(0.96);
+  }
+}
+
+@keyframes tutorialToolSlide {
+  0%,
+  34%,
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  46%,
+  58% {
+    opacity: 1;
+    transform: translate(var(--tutorial-hand-dx, 0), var(--tutorial-hand-dy, 0)) scale(1.05);
+  }
+  72%,
+  88% {
+    opacity: 0;
+    transform: translate(var(--tutorial-hand-dx, 0), var(--tutorial-hand-dy, 0)) scale(0.74);
   }
 }
 
