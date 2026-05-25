@@ -1,5 +1,6 @@
 ﻿import type { LevelConfig } from '../types/game';
 import whatIsParonychiaVideo from '../assets/videos/what-is-paronychia.mp4';
+import whyParonychiaVideo from '../assets/videos/why-paronychia-v2.mp4';
 
 const fixedVersion = 'research-v1';
 
@@ -62,8 +63,9 @@ export const levels: LevelConfig[] = [
     targetText: '清除全部 6 個障礙方塊',
     concept: '減少腳趾壓迫',
     passHint: '寬鬆透氣的鞋襪可減少摩擦與壓迫。',
-    videoTitle: '鞋襪選擇',
-    videoMessage: '鞋頭太窄容易壓迫甲溝，建議選擇合腳、寬鬆、透氣的鞋襪。',
+    videoTitle: '為什麼會甲溝炎？',
+    videoMessage: '藥物影響皮膚修復、變脆弱，容易導致甲溝炎。',
+    videoUrl: whyParonychiaVideo,
   },
   {
     levelId: 'L03',
