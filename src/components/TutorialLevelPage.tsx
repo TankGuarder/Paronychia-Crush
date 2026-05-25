@@ -18,6 +18,7 @@ interface TutorialStep {
   reason: string;
   board: TutorialCell[][];
   nextLabel: string;
+  showLegend?: boolean;
   swipeFrom?: BoardPosition;
   swipeTo?: BoardPosition;
   requiresSwipe?: boolean;
@@ -31,9 +32,9 @@ interface TutorialStep {
 
 const tutorialSteps: TutorialStep[] = [
   {
-    title: 'Step 1：先看目標',
-    message: '目標是清掉發紅手指障礙。移動工具方塊，讓三個一樣的工具在障礙旁邊連線。',
-    reason: '工具方塊可以移動；發紅手指是障礙，不能直接移動。',
+    title: 'Step 1：先認識方塊',
+    message: '遊戲裡有兩種方塊：障礙方塊不能移動；主要方塊可以移動。',
+    reason: '目標是把主要方塊移到障礙方塊旁邊，讓相同主要方塊連成一條線，就能消除障礙方塊。',
     board: [
       ['ointment', 'socks', 'lotion'],
       ['gloves', 'obstacle', 'cottonSwab'],
@@ -42,45 +43,38 @@ const tutorialSteps: TutorialStep[] = [
     movablePositions: [
       [0, 0],
       [0, 1],
+      [0, 2],
       [1, 0],
       [1, 2],
+      [2, 0],
       [2, 1],
+      [2, 2],
     ],
     lockedPositions: [[1, 1]],
-    nextLabel: '下一步',
+    showLegend: true,
+    nextLabel: '看移動示範',
   },
   {
-    title: 'Step 2：滑動亮起來的方塊',
-    message: '請按住亮起來的藥膏，往上滑到中間的襪子位置。',
-    reason: '藥膏滑到襪子的位置後，三個藥膏會連成一排並消除。',
+    title: 'Step 2：短影片示範移動',
+    message: '請看手指從藥膏滑到襪子的位置，讓三個藥膏在障礙旁邊連成一條線。',
+    reason: '三個相同主要方塊連線消除時，只要碰到障礙方塊的上下左右，障礙方塊也會一起消除。',
     board: [
-      ['socks', 'gloves', 'lotion'],
+      ['socks', 'obstacle', 'lotion'],
       ['ointment', 'socks', 'ointment'],
       ['gloves', 'ointment', 'cottonSwab'],
     ],
     swipeFrom: [2, 1],
     swipeTo: [1, 1],
-    nextLabel: '我來滑滑看',
+    nextLabel: '開始正式第一關',
     requiresSwipe: true,
     movablePositions: [[2, 1]],
+    lockedPositions: [[0, 1]],
     clearPreviewTile: 'ointment',
     clearPreviewPositions: [
       [1, 0],
       [1, 1],
       [1, 2],
     ],
-  },
-  {
-    title: 'Step 3：障礙也會一起消失',
-    message: '三個藥膏在障礙旁邊連線後，藥膏會消除，旁邊的發紅手指障礙也會消失。',
-    reason: '正式關卡就是重複這件事：在障礙旁邊消除工具方塊，把所有障礙清掉。',
-    board: [
-      ['socks', 'obstacle', 'lotion'],
-      ['ointment', 'ointment', 'ointment'],
-      ['gloves', 'empty', 'cottonSwab'],
-    ],
-    nextLabel: '開始第一關',
-    lockedPositions: [[0, 1]],
     redOutlinePositions: [
       [1, 0],
       [1, 1],
@@ -97,6 +91,13 @@ const tutorialSteps: TutorialStep[] = [
 
 const tileMap = new Map(tileDefinitions.map((tile) => [tile.id, tile]));
 const obstacleIcon = obstacleDefinitions[0]?.icon;
+const mainTileLabels: Array<{ id: TileType; label: string }> = [
+  { id: 'ointment', label: '藥膏' },
+  { id: 'socks', label: '襪子' },
+  { id: 'gloves', label: '手套' },
+  { id: 'lotion', label: '乳液' },
+  { id: 'cottonSwab', label: '棉棒' },
+];
 
 const samePosition = (a: BoardPosition | undefined, b: BoardPosition) => Boolean(a && a[0] === b[0] && a[1] === b[1]);
 const includesPosition = (positions: BoardPosition[] | undefined, target: BoardPosition) =>
@@ -125,21 +126,22 @@ const getGuideStyle = (from?: BoardPosition, to?: BoardPosition): CSSProperties 
 
 const getDefaultFeedback = (stepIndex: number) => {
   if (tutorialSteps[stepIndex]?.requiresSwipe) {
-    return '請滑動亮起來的方塊。';
+    return '可以跟著示範滑動，也可以直接看完後按開始。';
   }
-  return stepIndex === 0 ? '先看清楚：工具方塊可以移動，障礙不能移動。' : '看懂後按下一步。';
+  return '亮起來的是主要方塊，可以移動；中間的手指圖示是障礙，不能移動。';
 };
 
 export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialLevelPageProps) {
   const [stepIndex, setStepIndex] = useState(initialStep);
   const [dragStart, setDragStart] = useState<{ position: BoardPosition; x: number; y: number } | null>(null);
   const [feedback, setFeedback] = useState(getDefaultFeedback(initialStep));
-  const step = tutorialSteps[stepIndex];
+  const step = tutorialSteps[stepIndex] ?? tutorialSteps[0];
   const guideStyle = useMemo(() => getGuideStyle(step.swipeFrom, step.swipeTo), [step.swipeFrom, step.swipeTo]);
 
   useEffect(() => {
-    setStepIndex(initialStep);
-    setFeedback(getDefaultFeedback(initialStep));
+    const nextStep = Math.min(initialStep, tutorialSteps.length - 1);
+    setStepIndex(nextStep);
+    setFeedback(getDefaultFeedback(nextStep));
   }, [initialStep]);
 
   const goNext = () => {
@@ -163,7 +165,7 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
 
   const handlePointerDown = (event: PointerEvent<HTMLButtonElement>, row: number, col: number, cell: TutorialCell) => {
     if (cell === 'obstacle') {
-      setFeedback('障礙不能移動，請移動旁邊亮起來的工具方塊。');
+      setFeedback('障礙方塊不能移動，請移動旁邊亮起來的主要方塊。');
       return;
     }
 
@@ -184,10 +186,10 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
         : [dragStart.position[0] + (deltaY > 0 ? 1 : -1), dragStart.position[1]];
 
     if (samePosition(step.swipeFrom, dragStart.position) && samePosition(step.swipeTo, target)) {
-      setFeedback('做得很好，三個藥膏會慢慢連起來並消除。');
+      setFeedback('做得很好！藥膏連成一條線，旁邊的障礙也會消失。');
       window.setTimeout(goNext, 1100);
     } else {
-      setFeedback('再試一次，從亮起來的藥膏往上滑到襪子。');
+      setFeedback('這次方向不對，請從下方藥膏往上滑到襪子的位置。');
     }
     setDragStart(null);
   };
@@ -201,6 +203,31 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
         <p className="eyebrow">新手教學</p>
         <h1>{step.title}</h1>
         <p className="tutorial-message">{step.message}</p>
+
+        {step.showLegend && (
+          <div className="tutorial-legend" aria-label="方塊類型說明">
+            <div className="tutorial-legend-group tutorial-legend-obstacle">
+              <strong>障礙方塊：不可移動</strong>
+              <span className="tutorial-legend-icon">
+                {obstacleIcon && <img src={obstacleIcon} alt="障礙方塊" />}
+              </span>
+            </div>
+            <div className="tutorial-legend-group">
+              <strong>主要方塊：可以移動</strong>
+              <div className="tutorial-main-icons">
+                {mainTileLabels.map((tile) => {
+                  const icon = tileMap.get(tile.id)?.icon;
+                  return (
+                    <span key={tile.id} className="tutorial-legend-icon">
+                      {icon && <img src={icon} alt={tile.label} />}
+                      <small>{tile.label}</small>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="tutorial-mini-board" aria-label="新手教學棋盤">
           {step.board.map((row, rowIndex) =>
@@ -259,11 +286,9 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
               回上一步
             </button>
           )}
-          {!step.requiresSwipe && (
-            <button className="primary-button" type="button" onClick={goNext}>
-              {step.nextLabel}
-            </button>
-          )}
+          <button className="primary-button" type="button" onClick={goNext}>
+            {step.nextLabel}
+          </button>
         </div>
       </section>
     </main>
