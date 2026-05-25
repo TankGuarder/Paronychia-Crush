@@ -16,7 +16,7 @@ interface TutorialStep {
   title: string;
   message: string;
   reason: string;
-  board: TutorialCell[][];
+  board?: TutorialCell[][];
   nextLabel: string;
   showLegend?: boolean;
   swipeFrom?: BoardPosition;
@@ -32,32 +32,16 @@ interface TutorialStep {
 
 const tutorialSteps: TutorialStep[] = [
   {
-    title: 'Step 1：先認識方塊',
-    message: '遊戲裡有兩種方塊：障礙方塊不能移動；主要方塊可以移動。',
-    reason: '目標是把主要方塊移到障礙方塊旁邊，讓相同主要方塊連成一條線，就能消除障礙方塊。',
-    board: [
-      ['ointment', 'socks', 'lotion'],
-      ['gloves', 'obstacle', 'cottonSwab'],
-      ['socks', 'ointment', 'gloves'],
-    ],
-    movablePositions: [
-      [0, 0],
-      [0, 1],
-      [0, 2],
-      [1, 0],
-      [1, 2],
-      [2, 0],
-      [2, 1],
-      [2, 2],
-    ],
-    lockedPositions: [[1, 1]],
+    title: 'Step 1：辨認方塊',
+    message: '遊戲方塊分成兩類：工具方塊可以移動；障礙方塊不能移動。',
+    reason: '先記住哪些可以滑動、哪些不能動，下一步會示範怎麼用工具方塊消除障礙。',
     showLegend: true,
     nextLabel: '看移動示範',
   },
   {
     title: 'Step 2：短影片示範移動',
     message: '請看手指從藥膏滑到襪子的位置，讓三個藥膏在障礙旁邊連成一條線。',
-    reason: '三個相同主要方塊連線消除時，只要碰到障礙方塊的上下左右，障礙方塊也會一起消除。',
+    reason: '三個相同工具方塊連線消除時，只要碰到障礙方塊的上下左右，障礙方塊也會一起消除。',
     board: [
       ['socks', 'obstacle', 'lotion'],
       ['ointment', 'socks', 'ointment'],
@@ -128,7 +112,7 @@ const getDefaultFeedback = (stepIndex: number) => {
   if (tutorialSteps[stepIndex]?.requiresSwipe) {
     return '可以跟著示範滑動，也可以直接看完後按開始。';
   }
-  return '亮起來的是主要方塊，可以移動；中間的手指圖示是障礙，不能移動。';
+  return '工具方塊可以移動；障礙方塊不能移動。';
 };
 
 export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialLevelPageProps) {
@@ -165,7 +149,7 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
 
   const handlePointerDown = (event: PointerEvent<HTMLButtonElement>, row: number, col: number, cell: TutorialCell) => {
     if (cell === 'obstacle') {
-      setFeedback('障礙方塊不能移動，請移動旁邊亮起來的主要方塊。');
+      setFeedback('障礙方塊不能移動，請移動旁邊亮起來的工具方塊。');
       return;
     }
 
@@ -206,75 +190,82 @@ export function TutorialLevelPage({ initialStep, onComplete, onSkip }: TutorialL
 
         {step.showLegend && (
           <div className="tutorial-legend" aria-label="方塊類型說明">
-            <div className="tutorial-legend-group tutorial-legend-obstacle">
-              <strong>障礙方塊：不可移動</strong>
-              <span className="tutorial-legend-icon">
-                {obstacleIcon && <img src={obstacleIcon} alt="障礙方塊" />}
-              </span>
-            </div>
             <div className="tutorial-legend-group">
-              <strong>主要方塊：可以移動</strong>
-              <div className="tutorial-main-icons">
+              <strong>工具方塊：可以移動</strong>
+              <ul className="tutorial-icon-list">
                 {mainTileLabels.map((tile) => {
                   const icon = tileMap.get(tile.id)?.icon;
                   return (
-                    <span key={tile.id} className="tutorial-legend-icon">
-                      {icon && <img src={icon} alt={tile.label} />}
-                      <small>{tile.label}</small>
-                    </span>
+                    <li key={tile.id}>
+                      <span className="tutorial-legend-icon">{icon && <img src={icon} alt={tile.label} />}</span>
+                      <span>{tile.label}</span>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
+            </div>
+            <div className="tutorial-legend-group tutorial-legend-obstacle">
+              <strong>障礙方塊：不可移動</strong>
+              <ul className="tutorial-icon-list">
+                <li>
+                  <span className="tutorial-legend-icon">
+                    {obstacleIcon && <img src={obstacleIcon} alt="發紅手指障礙" />}
+                  </span>
+                  <span>發紅手指</span>
+                </li>
+              </ul>
             </div>
           </div>
         )}
 
-        <div className="tutorial-mini-board" aria-label="新手教學棋盤">
-          {step.board.map((row, rowIndex) =>
-            row.map((cell, colIndex) => {
-              const position: BoardPosition = [rowIndex, colIndex];
-              const isStart = samePosition(step.swipeFrom, position);
-              const isEnd = samePosition(step.swipeTo, position);
-              const isMovable = includesPosition(step.movablePositions, position);
-              const isLocked = includesPosition(step.lockedPositions, position) || cell === 'obstacle';
-              const isClearPreview = includesPosition(step.clearPreviewPositions, position);
-              const isRedOutlined = includesPosition(step.redOutlinePositions, position);
-              const shouldFadeOut = includesPosition(step.fadeOutPositions, position);
-              const icon = cell === 'obstacle' ? obstacleIcon : cell === 'empty' ? undefined : tileMap.get(cell)?.icon;
-              const previewIcon = step.clearPreviewTile ? tileMap.get(step.clearPreviewTile)?.icon : undefined;
+        {step.board && (
+          <div className="tutorial-mini-board" aria-label="新手教學棋盤">
+            {step.board.map((row, rowIndex) =>
+              row.map((cell, colIndex) => {
+                const position: BoardPosition = [rowIndex, colIndex];
+                const isStart = samePosition(step.swipeFrom, position);
+                const isEnd = samePosition(step.swipeTo, position);
+                const isMovable = includesPosition(step.movablePositions, position);
+                const isLocked = includesPosition(step.lockedPositions, position) || cell === 'obstacle';
+                const isClearPreview = includesPosition(step.clearPreviewPositions, position);
+                const isRedOutlined = includesPosition(step.redOutlinePositions, position);
+                const shouldFadeOut = includesPosition(step.fadeOutPositions, position);
+                const icon = cell === 'obstacle' ? obstacleIcon : cell === 'empty' ? undefined : tileMap.get(cell)?.icon;
+                const previewIcon = step.clearPreviewTile ? tileMap.get(step.clearPreviewTile)?.icon : undefined;
 
-              return (
-                <button
-                  key={`${rowIndex}-${colIndex}`}
-                  className={`tutorial-cell ${cell === 'obstacle' ? 'tutorial-obstacle' : ''} ${
-                    isStart ? 'tutorial-start' : ''
-                  } ${isEnd ? 'tutorial-end' : ''} ${cell === 'empty' ? 'tutorial-empty' : ''} ${
-                    isMovable ? 'tutorial-movable' : ''
-                  } ${isLocked ? 'tutorial-locked' : ''} ${isRedOutlined ? 'tutorial-red-outline' : ''} ${
-                    shouldFadeOut ? 'tutorial-fade-out' : ''
-                  }`}
-                  type="button"
-                  onPointerDown={(event) => handlePointerDown(event, rowIndex, colIndex, cell)}
-                  onPointerUp={handlePointerUp}
-                >
-                  {icon && <img src={icon} alt="" />}
-                  {isClearPreview && previewIcon && (
-                    <img className="tutorial-clear-preview" src={previewIcon} alt="" aria-hidden="true" />
-                  )}
-                </button>
-              );
-            }),
-          )}
+                return (
+                  <button
+                    key={`${rowIndex}-${colIndex}`}
+                    className={`tutorial-cell ${cell === 'obstacle' ? 'tutorial-obstacle' : ''} ${
+                      isStart ? 'tutorial-start' : ''
+                    } ${isEnd ? 'tutorial-end' : ''} ${cell === 'empty' ? 'tutorial-empty' : ''} ${
+                      isMovable ? 'tutorial-movable' : ''
+                    } ${isLocked ? 'tutorial-locked' : ''} ${isRedOutlined ? 'tutorial-red-outline' : ''} ${
+                      shouldFadeOut ? 'tutorial-fade-out' : ''
+                    }`}
+                    type="button"
+                    onPointerDown={(event) => handlePointerDown(event, rowIndex, colIndex, cell)}
+                    onPointerUp={handlePointerUp}
+                  >
+                    {icon && <img src={icon} alt="" />}
+                    {isClearPreview && previewIcon && (
+                      <img className="tutorial-clear-preview" src={previewIcon} alt="" aria-hidden="true" />
+                    )}
+                  </button>
+                );
+              }),
+            )}
 
-          {step.swipeFrom && step.swipeTo && (
-            <>
-              <span className="tutorial-track" style={guideStyle} aria-hidden="true" />
-              <span className="tutorial-hand" style={guideStyle} aria-hidden="true">
-                <img src={hintHandIcon} alt="" />
-              </span>
-            </>
-          )}
-        </div>
+            {step.swipeFrom && step.swipeTo && (
+              <>
+                <span className="tutorial-track" style={guideStyle} aria-hidden="true" />
+                <span className="tutorial-hand" style={guideStyle} aria-hidden="true">
+                  <img src={hintHandIcon} alt="" />
+                </span>
+              </>
+            )}
+          </div>
+        )}
 
         <p className="tutorial-reason">{step.reason}</p>
         <p className="status-message" aria-live="polite">
