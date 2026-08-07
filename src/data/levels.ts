@@ -1,6 +1,8 @@
 ﻿import type { LevelConfig } from '../types/game';
 import whatIsParonychiaVideo from '../assets/videos/what-is-paronychia.mp4';
 import whyParonychiaVideo from '../assets/videos/why-paronychia-v2.mp4';
+import paronychiaSeverityVideo from '../assets/videos/paronychia-severity.mp4';
+import dailyCareProtectionMoisturizingVideo from '../assets/videos/daily-care-protection-moisturizing-compressed.mp4';
 
 const fixedVersion = 'research-v1';
 
@@ -90,8 +92,9 @@ export const levels: LevelConfig[] = [
     targetText: '清除全部 10 個障礙方塊',
     concept: '避免刺激物接觸',
     passHint: '清潔或碰水時戴手套，可保護甲溝皮膚。',
-    videoTitle: '手套保護',
-    videoMessage: '做清潔、洗碗或接觸刺激性清潔劑時，戴手套能降低發炎機會。',
+    videoTitle: '甲溝炎嚴重程度',
+    videoMessage: '了解甲溝炎的嚴重程度，出現惡化徵象時應及早處理。',
+    videoUrl: paronychiaSeverityVideo,
   },
   {
     levelId: 'L04',
@@ -118,8 +121,9 @@ export const levels: LevelConfig[] = [
     targetText: '清除全部 12 個障礙方塊',
     concept: '維持皮膚屏障',
     passHint: '規律保濕可減少乾裂，幫助皮膚屏障恢復。',
-    videoTitle: '保濕照護',
-    videoMessage: '甲溝周圍乾裂時較容易受刺激，洗手後可適量保濕。',
+    videoTitle: '日常照顧：保護保濕',
+    videoMessage: '做好日常保護與保濕，能減少刺激並幫助皮膚屏障維持穩定。',
+    videoUrl: dailyCareProtectionMoisturizingVideo,
   },
   {
     levelId: 'L05',
