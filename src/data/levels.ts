@@ -6,6 +6,7 @@ import dailyCareProtectionMoisturizingVideo from '../assets/videos/daily-care-pr
 import reduceIrritationVideo from '../assets/videos/reduce-irritation.mp4';
 import correctNailTrimmingVideo from '../assets/videos/correct-nail-trimming.mp4';
 import medicationIntroPartOneVideo from '../assets/videos/medication-intro-part-1.mp4';
+import medicationIntroPartTwoVideo from '../assets/videos/medication-intro-part-2.mp4';
 
 const fixedVersion = 'research-v1';
 
@@ -251,8 +252,9 @@ export const levels: LevelConfig[] = [
     targetText: '清除全部 15 個障礙方塊',
     concept: '減少潮濕悶熱',
     passHint: '保持腳部乾爽，可降低皮膚受刺激與感染風險。',
-    videoTitle: '保持乾爽',
-    videoMessage: '流汗或弄濕後可更換襪子，減少長時間潮濕悶熱。',
+    videoTitle: '藥物介紹 Part 2',
+    videoMessage: '持續認識藥物使用注意事項，依照醫囑完成治療。',
+    videoUrl: medicationIntroPartTwoVideo,
   },
   {
     levelId: 'L09',
