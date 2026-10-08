@@ -3,6 +3,7 @@ import whatIsParonychiaVideo from '../assets/videos/what-is-paronychia.mp4';
 import whyParonychiaVideo from '../assets/videos/why-paronychia-v2.mp4';
 import paronychiaSeverityVideo from '../assets/videos/paronychia-severity.mp4';
 import dailyCareProtectionMoisturizingVideo from '../assets/videos/daily-care-protection-moisturizing-compressed.mp4';
+import reduceIrritationVideo from '../assets/videos/reduce-irritation.mp4';
 
 const fixedVersion = 'research-v1';
 
@@ -152,8 +153,9 @@ export const levels: LevelConfig[] = [
     targetText: '清除全部 14 個障礙方塊',
     concept: '避免尖銳挖抓',
     passHint: '可用乾淨棉棒輕柔清潔，避免尖銳工具挖甲溝。',
-    videoTitle: '溫和清潔',
-    videoMessage: '清潔患部要輕柔，不建議用針、剪刀尖端或硬物深入甲溝。',
+    videoTitle: '減少刺激',
+    videoMessage: '減少摩擦、壓迫與刺激，能幫助甲溝周圍皮膚穩定恢復。',
+    videoUrl: reduceIrritationVideo,
   },
   {
     levelId: 'L06',
