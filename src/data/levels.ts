@@ -4,6 +4,7 @@ import whyParonychiaVideo from '../assets/videos/why-paronychia-v2.mp4';
 import paronychiaSeverityVideo from '../assets/videos/paronychia-severity.mp4';
 import dailyCareProtectionMoisturizingVideo from '../assets/videos/daily-care-protection-moisturizing-compressed.mp4';
 import reduceIrritationVideo from '../assets/videos/reduce-irritation.mp4';
+import correctNailTrimmingVideo from '../assets/videos/correct-nail-trimming.mp4';
 
 const fixedVersion = 'research-v1';
 
@@ -185,8 +186,9 @@ export const levels: LevelConfig[] = [
     targetText: '清除全部 15 個障礙方塊',
     concept: '辨識惡化徵象',
     passHint: '紅腫擴大、疼痛加劇或流膿時，應盡快就醫。',
-    videoTitle: '紅腫警訊',
-    videoMessage: '如果發炎範圍變大、疼痛變強或出現膿液，請讓醫護人員評估。',
+    videoTitle: '正確修剪指甲',
+    videoMessage: '正確修剪指甲，避免剪太短或剪進邊角，可減少甲溝受傷與發炎風險。',
+    videoUrl: correctNailTrimmingVideo,
   },
   {
     levelId: 'L07',
