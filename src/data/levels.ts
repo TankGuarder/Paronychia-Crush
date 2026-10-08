@@ -5,6 +5,7 @@ import paronychiaSeverityVideo from '../assets/videos/paronychia-severity.mp4';
 import dailyCareProtectionMoisturizingVideo from '../assets/videos/daily-care-protection-moisturizing-compressed.mp4';
 import reduceIrritationVideo from '../assets/videos/reduce-irritation.mp4';
 import correctNailTrimmingVideo from '../assets/videos/correct-nail-trimming.mp4';
+import medicationIntroPartOneVideo from '../assets/videos/medication-intro-part-1.mp4';
 
 const fixedVersion = 'research-v1';
 
@@ -218,8 +219,9 @@ export const levels: LevelConfig[] = [
     targetText: '清除全部 15 個障礙方塊',
     concept: '避免指甲剪太短',
     passHint: '修剪指甲建議平剪，不要剪太短或剪進兩側角落。',
-    videoTitle: '修剪指甲',
-    videoMessage: '指甲剪太短或剪進邊角，可能增加嵌甲與甲溝發炎風險。',
+    videoTitle: '藥物介紹 Part 1',
+    videoMessage: '認識常見藥物與使用重點，依照醫囑正確用藥。',
+    videoUrl: medicationIntroPartOneVideo,
   },
   {
     levelId: 'L08',
